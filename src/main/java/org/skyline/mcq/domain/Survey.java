@@ -9,16 +9,14 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Builder
-@Getter@Setter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Survey {
 
     @Id
     @UuidGenerator
@@ -27,33 +25,26 @@ public class User {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String firstName;
-    private String lastName;
-
-    @Column(unique = true, length = 20)
-    private String username;
-
-    @Column(unique = true)
-    private String email;
-
-    @Column(length = 60)
-    private String password;
-    private String profileImage;
+    private String title;
     private String description;
+    private String image;
+    private Integer maxPoints;
+    private Integer questionCount;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
     private boolean isActive = true;
+    private Integer timeLimit;
 
-    @Builder.Default
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+    private Integer attempts;
+    private boolean isPublic = false;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "user")
-    private Set<Category> categories = new HashSet<>();
-
-    @OneToMany(mappedBy = "user")
-    private Set<Survey> surveys;
+    @Column(nullable = true, length = 60)
+    private String password;
 
     @CreationTimestamp
     @Column(updatable = false)

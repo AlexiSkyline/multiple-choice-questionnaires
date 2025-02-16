@@ -9,7 +9,6 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -17,7 +16,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Question {
 
     @Id
     @UuidGenerator
@@ -26,14 +25,15 @@ public class Category {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String title;
-    private String description;
+    private String content;
     private String image;
+    private Integer points;
+    private Integer allowedAnswers;
+    private String options;
+    private String correctAnswers;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-    private boolean isActive = true;
+    private Survey survey;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -41,7 +41,4 @@ public class Category {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
-
-    @OneToMany(mappedBy = "category")
-    private Set<Survey> surveys;
 }
