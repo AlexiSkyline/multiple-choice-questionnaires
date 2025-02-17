@@ -26,7 +26,7 @@ public class Result {
     private UUID id;
 
     @ManyToOne
-    private User user;
+    private Account account;
 
     @ManyToOne
     private Survey survey;

@@ -3,7 +3,7 @@ drop table if exists answer;
 
 create table result (
     id varchar(36) NOT NULL,
-	user_id varchar(36) NOT NULL,
+    account_id varchar(36) NOT NULL,
 	survey_id varchar(36) NOT NULL,
 	start_time datetime(6),
 	end_time datetime(6),
@@ -13,13 +13,13 @@ create table result (
 	incorrect_answers int,
     created_at datetime(6),
     primary key (id),
-    CONSTRAINT FOREIGN KEY (user_id) REFERENCES user (id),
+    CONSTRAINT FOREIGN KEY (account_id) REFERENCES account (id),
     CONSTRAINT FOREIGN KEY (survey_id) REFERENCES survey (id)
 ) engine=InnoDB;
 
 create table answer (
     id varchar(36) NOT NULL,
-    user_id varchar(36) NOT NULL,
+    account_id varchar(36) NOT NULL,
     question_id varchar(36) NOT NULL,
     result_id varchar(36) NOT NULL,
     user_answers text,
@@ -27,7 +27,7 @@ create table answer (
     points int,
     created_at datetime(6),
     primary key (id),
-    CONSTRAINT FOREIGN KEY (user_id) REFERENCES user (id),
+    CONSTRAINT FOREIGN KEY (account_id) REFERENCES account (id),
     CONSTRAINT FOREIGN KEY (question_id) REFERENCES question (id),
     CONSTRAINT FOREIGN KEY (result_id) REFERENCES result (id)
 ) engine=InnoDB;

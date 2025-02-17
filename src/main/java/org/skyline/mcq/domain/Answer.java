@@ -25,7 +25,7 @@ public class Answer {
     private UUID id;
 
     @ManyToOne
-    private User user;
+    private Account account;
 
     @ManyToOne
     private Question question;

@@ -11,7 +11,7 @@ create table survey (
     category_id varchar(36) NOT NULL,
     is_active tinyint(1) DEFAULT 1,
     time_limit BIGINT,
-    user_id varchar(36) NOT NULL,
+    account_id varchar(36) NOT NULL,
     attempts int,
     is_public tinyint(1) DEFAULT 0,
     password varchar(60) DEFAULT NULL,
@@ -19,7 +19,7 @@ create table survey (
     updated_at datetime(6),
     primary key (id),
     CONSTRAINT FOREIGN KEY (category_id) REFERENCES category (id),
-    CONSTRAINT FOREIGN KEY (user_id) REFERENCES user (id)
+    CONSTRAINT FOREIGN KEY (account_id) REFERENCES account (id)
 ) engine=InnoDB;
 
 create table question (

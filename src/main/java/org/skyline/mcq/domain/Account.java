@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Account {
 
     @Id
     @UuidGenerator
@@ -44,15 +44,15 @@ public class User {
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"),
+    @JoinTable(name = "account_role", joinColumns = @JoinColumn(name = "account_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "account")
     private Set<Category> categories = new HashSet<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "account")
     private Set<Survey> surveys;
 
     @CreationTimestamp

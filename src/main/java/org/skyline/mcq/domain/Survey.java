@@ -32,14 +32,12 @@ public class Survey {
     private Integer questionCount;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
     private Category category;
     private boolean isActive = true;
     private Integer timeLimit;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Account account;
     private Integer attempts;
     private boolean isPublic = false;
 

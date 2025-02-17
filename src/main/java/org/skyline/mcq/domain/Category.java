@@ -31,8 +31,7 @@ public class Category {
     private String image;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private Account account;
     private boolean isActive = true;
 
     @CreationTimestamp
