@@ -14,6 +14,7 @@ create table survey (
     account_id varchar(36) NOT NULL,
     attempts int,
     is_public tinyint(1) DEFAULT 0,
+    status tinyint(1) DEFAULT 0,
     password varchar(60) DEFAULT NULL,
     created_at datetime(6),
     updated_at datetime(6),

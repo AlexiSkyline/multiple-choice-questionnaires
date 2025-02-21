@@ -39,7 +39,9 @@ public class Survey {
     @ManyToOne
     private Account account;
     private Integer attempts;
-    private boolean isPublic = false;
+    @Column(name = "is_public")
+    private boolean hasRestrictedAccess = false;
+    private boolean status = false;
 
     @Column(nullable = true, length = 60)
     private String password;
