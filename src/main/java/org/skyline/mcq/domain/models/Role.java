@@ -10,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
+import org.skyline.mcq.domain.enums.TypeRole;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -28,16 +29,10 @@ public class Role {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String name;
+    private TypeRole name;
     private String description;
-
-    @Builder.Default
-    private Boolean active = true;
 
     @CreationTimestamp
     @Column(updatable = false)
     private Timestamp createdAt;
-
-    @UpdateTimestamp
-    private Timestamp updatedAt;
 }

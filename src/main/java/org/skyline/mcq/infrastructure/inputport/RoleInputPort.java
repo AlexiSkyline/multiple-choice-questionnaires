@@ -1,11 +1,13 @@
 package org.skyline.mcq.infrastructure.inputport;
 
-import org.skyline.mcq.domain.models.Role;
+import org.skyline.mcq.application.dtos.input.RoleRequestDto;
+import org.skyline.mcq.application.dtos.output.RoleResponseDto;
+import org.skyline.mcq.domain.enums.TypeRole;
 
 import java.util.Optional;
 
 public interface RoleInputPort {
 
-    Role saveRole(Role role);
-    Optional<Role> findByName(String name);
+    Optional<RoleResponseDto> saveRole(RoleRequestDto role);
+    Optional<RoleResponseDto> findByName(TypeRole name);
 }

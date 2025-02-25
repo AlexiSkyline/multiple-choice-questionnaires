@@ -1,6 +1,7 @@
 package org.skyline.mcq.infrastructure.bootstrap;
 
 import lombok.RequiredArgsConstructor;
+import org.skyline.mcq.domain.enums.TypeRole;
 import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.domain.models.Role;
@@ -34,17 +35,17 @@ public class BootstrapData implements CommandLineRunner {
 
         if (roleRepository.count() == 0) {
             var admin = Role.builder()
-                    .name("ADMIN")
+                    .name(TypeRole.ADMIN)
                     .description("Administrator")
                     .build();
 
             var surveyCreator = Role.builder()
-                    .name("SURVEY_CREATOR")
+                    .name(TypeRole.SURVEY_CREATOR)
                     .description("Survey Creator")
                     .build();
 
             var surveyRespondent = Role.builder()
-                    .name("SURVEY_RESPONDENT")
+                    .name(TypeRole.SURVEY_RESPONDENT)
                     .description("Survey Respondent")
                     .build();
 

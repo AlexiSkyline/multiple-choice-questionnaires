@@ -35,9 +35,7 @@ create table role (
       id varchar(36) NOT NULL,
       name varchar(50),
       description text,
-      active tinyint(1) DEFAULT 1,
       created_at datetime(6),
-      updated_at datetime(6),
       primary key (id)
 ) engine=InnoDB;
 
