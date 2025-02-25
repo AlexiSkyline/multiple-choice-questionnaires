@@ -1,6 +1,6 @@
 package org.skyline.mcq.infrastructure.inputport;
 
-import org.skyline.mcq.domain.Role;
+import org.skyline.mcq.domain.models.Role;
 
 import java.util.Optional;
 

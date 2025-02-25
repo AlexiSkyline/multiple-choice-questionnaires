@@ -2,7 +2,7 @@ package org.skyline.mcq.infrastructure.outputport;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.skyline.mcq.domain.Role;
+import org.skyline.mcq.domain.models.Role;
 import org.skyline.mcq.infrastructure.bootstrap.BootstrapData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -64,6 +64,6 @@ class RoleRepositoryTest {
         foundRole.setActive(false);
         roleRepository.save(foundRole);
 
-        assertFalse(roleRepository.findById(foundRole.getId()).get().isActive());
+        assertFalse(roleRepository.findById(foundRole.getId()).get().getActive());
     }
 }

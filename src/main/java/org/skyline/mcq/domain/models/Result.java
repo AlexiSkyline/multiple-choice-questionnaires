@@ -1,14 +1,14 @@
-package org.skyline.mcq.domain;
+package org.skyline.mcq.domain.models;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Question {
+public class Result {
 
     @Id
     @UuidGenerator
@@ -25,20 +25,28 @@ public class Question {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String content;
-    private String image;
-    private Integer points;
-    private Integer allowedAnswers;
-    private String options;
-    private String correctAnswers;
+    @ManyToOne
+    private Account account;
 
     @ManyToOne
     private Survey survey;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private Timestamp createdAt;
+    private Timestamp startTime;
 
-    @UpdateTimestamp
-    private Timestamp updatedAt;
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Timestamp endTime;
+    private Integer duration;
+    private Integer totalPoints;
+    private Integer correctAnswers;
+    private Integer incorrectAnswers;
+
+    @OneToMany(mappedBy = "result")
+    private Set<Answer> answers;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Timestamp createdAt;
 }

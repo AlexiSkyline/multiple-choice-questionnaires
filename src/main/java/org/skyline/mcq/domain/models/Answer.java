@@ -1,15 +1,13 @@
-package org.skyline.mcq.domain;
+package org.skyline.mcq.domain.models;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -17,7 +15,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Answer {
 
     @Id
     @UuidGenerator
@@ -26,21 +24,19 @@ public class Category {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String title;
-    private String description;
-    private String image;
-
     @ManyToOne
     private Account account;
-    private boolean isActive = true;
+
+    @ManyToOne
+    private Question question;
+
+    @ManyToOne
+    private Result result;
+    private String userAnswers;
+    private Boolean isCorrect;
+    private Integer points;
 
     @CreationTimestamp
     @Column(updatable = false)
     private Timestamp createdAt;
-
-    @UpdateTimestamp
-    private Timestamp updatedAt;
-
-    @OneToMany(mappedBy = "category")
-    private Set<Survey> surveys;
 }

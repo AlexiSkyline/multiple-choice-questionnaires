@@ -1,6 +1,6 @@
 package org.skyline.mcq.infrastructure.inputport;
 
-import org.skyline.mcq.domain.Account;
+import org.skyline.mcq.domain.models.Account;
 
 import java.util.Optional;
 import java.util.UUID;

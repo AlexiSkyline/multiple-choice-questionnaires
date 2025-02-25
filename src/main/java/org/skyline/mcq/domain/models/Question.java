@@ -1,4 +1,4 @@
-package org.skyline.mcq.domain;
+package org.skyline.mcq.domain.models;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Survey {
+public class Question {
 
     @Id
     @UuidGenerator
@@ -25,26 +25,15 @@ public class Survey {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String title;
-    private String description;
+    private String content;
     private String image;
-    private Integer maxPoints;
-    private Integer questionCount;
+    private Integer points;
+    private Integer allowedAnswers;
+    private String options;
+    private String correctAnswers;
 
     @ManyToOne
-    private Category category;
-    private boolean isActive = true;
-    private Integer timeLimit;
-
-    @ManyToOne
-    private Account account;
-    private Integer attempts;
-    @Column(name = "is_public")
-    private boolean hasRestrictedAccess = false;
-    private boolean status = false;
-
-    @Column(nullable = true, length = 60)
-    private String password;
+    private Survey survey;
 
     @CreationTimestamp
     @Column(updatable = false)

@@ -1,6 +1,6 @@
 package org.skyline.mcq.infrastructure.outputport;
 
-import org.skyline.mcq.domain.Survey;
+import org.skyline.mcq.domain.models.Survey;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,6 +1,6 @@
 package org.skyline.mcq.infrastructure.outputport;
 
-import org.skyline.mcq.domain.Account;
+import org.skyline.mcq.domain.models.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

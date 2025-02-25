@@ -12,7 +12,7 @@ create table account (
       password varchar(60),
       profile_image varchar(255),
       description text,
-      is_active tinyint(1) DEFAULT 1,
+      active tinyint(1) DEFAULT 1,
       created_at datetime(6),
       updated_at datetime(6),
       primary key (id)
@@ -24,7 +24,7 @@ create table category (
       image varchar(255),
       description text,
       account_id varchar(36),
-      is_active tinyint(1) DEFAULT 1,
+      active tinyint(1) DEFAULT 1,
       created_at datetime(6),
       updated_at datetime(6),
       primary key (id),
@@ -35,7 +35,7 @@ create table role (
       id varchar(36) NOT NULL,
       name varchar(50),
       description text,
-      is_active tinyint(1) DEFAULT 1,
+      active tinyint(1) DEFAULT 1,
       created_at datetime(6),
       updated_at datetime(6),
       primary key (id)

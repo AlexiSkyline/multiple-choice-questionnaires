@@ -1,6 +1,6 @@
 package org.skyline.mcq.infrastructure.inputport;
 
-import org.skyline.mcq.domain.Answer;
+import org.skyline.mcq.domain.models.Answer;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;

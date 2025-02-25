@@ -5,7 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.skyline.mcq.domain.Survey;
+import org.skyline.mcq.domain.models.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +35,7 @@ class SurveyRepositoryTest {
                 .image("survey.png")
                 .maxPoints(10)
                 .questionCount(5)
-                .isActive(true)
+                .active(true)
                 .timeLimit(3600)
                 .attempts(1)
                 .hasRestrictedAccess(true)
@@ -136,6 +136,6 @@ class SurveyRepositoryTest {
 
         var survey = surveyRepository.findById(savedSurvey.getId())
                 .orElseThrow(() -> new RuntimeException("Survey not found"));
-        assertFalse(survey.isActive());
+        assertFalse(survey.getActive());
     }
 }

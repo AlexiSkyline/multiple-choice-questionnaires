@@ -3,8 +3,8 @@ package org.skyline.mcq.infrastructure.outputport;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.skyline.mcq.domain.Account;
-import org.skyline.mcq.domain.Category;
+import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.infrastructure.bootstrap.BootstrapData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -37,6 +37,7 @@ class CategoryRepositoryTest {
         var category = Category.builder()
                 .title("New Category")
                 .description("New Category")
+                .active(true)
                 .image("New_Category.png")
                 .build();
 
@@ -47,18 +48,27 @@ class CategoryRepositoryTest {
     }
 
     @Test
-    void testFindAllByTitle() {
+    void testFindAllByTitleActive() {
 
-        var categories = categoryRepository.findAllByTitleIsLikeIgnoreCase("%academic%", null);
+        var categories = categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%academic%", true, null);
 
         assertNotNull(categories);
         assertFalse(categories.getContent().isEmpty());
     }
 
     @Test
+    void testFindAllByTitleDisActive() {
+
+        var categories = categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%academic%", false, null);
+
+        assertNotNull(categories);
+        assertTrue(categories.getContent().isEmpty());
+    }
+
+    @Test
     void testFindAllByTitleNoResults() {
 
-        var categories = categoryRepository.findAllByTitleIsLikeIgnoreCase("%nonexistent%", null);
+        var categories = categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%nonexistent%", true, null);
 
         assertNotNull(categories);
         assertTrue(categories.getContent().isEmpty(), "Expected no categories to be returned");
@@ -67,7 +77,7 @@ class CategoryRepositoryTest {
     @Test
     void testFindAllByUserId() {
 
-        var categories = categoryRepository.findAllByAccount_Id(accountTest.getId(), null);
+        var categories = categoryRepository.findAllByAccountIdAndActiveIsTrue(accountTest.getId(), null);
 
         assertFalse(categories.getContent().isEmpty(), "Expected categories to be returned");
         assertTrue(categories.getContent().stream().allMatch(c -> c.getAccount().equals(accountTest)),
@@ -80,7 +90,7 @@ class CategoryRepositoryTest {
         var emptyAccount = new Account();
         emptyAccount.setId(UUID.randomUUID());
 
-        var categories = categoryRepository.findAllByAccount_Id(emptyAccount.getId(), null);
+        var categories = categoryRepository.findAllByAccountIdAndActiveIsTrue(emptyAccount.getId(), null);
 
         assertTrue(categories.getContent().isEmpty(), "Expected no categories for this account");
     }
@@ -114,8 +124,13 @@ class CategoryRepositoryTest {
                 .build();
 
         var savedCategory = categoryRepository.save(category);
+        savedCategory.setActive(false);
 
-        categoryRepository.delete(savedCategory);
-        assertFalse(categoryRepository.existsById(savedCategory.getId()));
+        categoryRepository.save(savedCategory);
+
+        var categoryDeleted = categoryRepository.findById(savedCategory.getId()).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        assertNotNull(categoryDeleted);
+        assertFalse(categoryDeleted.getActive());
     }
 }

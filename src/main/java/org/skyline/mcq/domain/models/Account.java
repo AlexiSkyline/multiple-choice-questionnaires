@@ -1,4 +1,4 @@
-package org.skyline.mcq.domain;
+package org.skyline.mcq.domain.models;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,7 +40,9 @@ public class Account {
     private String password;
     private String profileImage;
     private String description;
-    private boolean isActive = true;
+
+    @Builder.Default
+    private Boolean active = true;
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)

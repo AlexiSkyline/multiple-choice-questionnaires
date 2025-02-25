@@ -1,9 +1,6 @@
-package org.skyline.mcq.domain;
+package org.skyline.mcq.domain.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -12,6 +9,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +17,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Role {
+public class Category {
 
     @Id
     @UuidGenerator
@@ -28,10 +26,15 @@ public class Role {
     @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
     private UUID id;
 
-    private String name;
+    private String title;
     private String description;
+    private String image;
 
-    private boolean isActive = true;
+    @ManyToOne
+    private Account account;
+
+    @Builder.Default
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -39,4 +42,7 @@ public class Role {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @OneToMany(mappedBy = "category")
+    private Set<Survey> surveys;
 }

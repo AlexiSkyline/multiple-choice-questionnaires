@@ -9,7 +9,7 @@ create table survey (
     max_points int,
     question_count int,
     category_id varchar(36) NOT NULL,
-    is_active tinyint(1) DEFAULT 1,
+    active tinyint(1) DEFAULT 1,
     time_limit BIGINT,
     account_id varchar(36) NOT NULL,
     attempts int,

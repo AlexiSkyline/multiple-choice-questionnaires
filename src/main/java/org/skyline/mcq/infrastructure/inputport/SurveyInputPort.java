@@ -1,7 +1,7 @@
 package org.skyline.mcq.infrastructure.inputport;
 
-import org.skyline.mcq.domain.Account;
-import org.skyline.mcq.domain.Survey;
+import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Survey;
 import org.springframework.data.domain.Page;
 
 import java.util.Optional;

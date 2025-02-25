@@ -1,9 +1,9 @@
 package org.skyline.mcq.infrastructure.bootstrap;
 
 import lombok.RequiredArgsConstructor;
-import org.skyline.mcq.domain.Account;
-import org.skyline.mcq.domain.Category;
-import org.skyline.mcq.domain.Role;
+import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Category;
+import org.skyline.mcq.domain.models.Role;
 import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.skyline.mcq.infrastructure.outputport.RoleRepository;
 import org.skyline.mcq.infrastructure.outputport.AccountRepository;
