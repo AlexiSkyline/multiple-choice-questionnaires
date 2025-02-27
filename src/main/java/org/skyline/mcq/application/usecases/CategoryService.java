@@ -77,7 +77,7 @@ public class CategoryService implements CategoryInputPort {
 
         Optional<Category> category = categoryRepository.findById(id);
 
-        if (category.isPresent()) {
+        if (category.isPresent() && Boolean.TRUE.equals(category.get().getActive())) {
             category.get().setActive(false);
             categoryRepository.save(category.get());
             return true;
