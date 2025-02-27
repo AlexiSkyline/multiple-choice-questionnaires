@@ -33,6 +33,6 @@ public class RoleService implements RoleInputPort {
 
     @Override
     public Optional<RoleResponseDto> findByName(TypeRole name) {
-        return this.roleRepository.findByName(name).map(roleMapper::roleToRoleResponseDto);
+        return Optional.ofNullable(this.roleRepository.findByName(name).map(roleMapper::roleToRoleResponseDto).orElse(null));
     }
 }

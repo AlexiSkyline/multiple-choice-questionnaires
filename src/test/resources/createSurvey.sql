@@ -9,12 +9,12 @@ VALUES
 INSERT INTO survey (id, title, image, description, max_points, question_count, category_id, active, time_limit, account_id, attempts, is_public, status, password, created_at, updated_at)
 VALUES
     ('44444444-4444-4444-4444-444444444444', 'Survey 1 - Cat 1', 'http://example.com/survey1.png', 'Encuesta para Categoría 1', 100, 10, '22222222-2222-2222-2222-222222222222', 1, 3600, '11111111-1111-1111-1111-111111111111', 1, 0, 1, NULL, NOW(), NOW()),
-    ('55555555-5555-5555-5555-555555555555', 'Survey 2 - Cat 1', 'http://example.com/survey2.png', 'Otra encuesta para Categoría 1', 100, 15, '22222222-2222-2222-2222-222222222222', 1, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 0, NULL, NOW(), NOW());
+    ('55555555-5555-5555-5555-555555555555', 'Survey 2 - Cat 1', 'http://example.com/survey2.png', 'Otra encuesta para Categoría 1', 100, 15, '22222222-2222-2222-2222-222222222222', 0, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 0, NULL, NOW(), NOW());
 
 INSERT INTO survey (id, title, image, description, max_points, question_count, category_id, active, time_limit, account_id, attempts, is_public, status, password, created_at, updated_at)
 VALUES
-    ('66666666-6666-6666-6666-666666666666', 'Survey 1 - Cat 2', 'http://example.com/survey3.png', 'Encuesta para Categoría 2', 100, 10, '33333333-3333-3333-3333-333333333333', 1, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 0, NULL, NOW(), NOW()),
-    ('77777777-7777-7777-7777-777777777777', 'Survey 2 - Cat 2', 'http://example.com/survey4.png', 'Otra encuesta para Categoría 2', 100, 20, '33333333-3333-3333-3333-333333333333', 1, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 1, NULL, NOW(), NOW()),
+    ('66666666-6666-6666-6666-666666666666', 'Survey 1 - Cat 2', 'http://example.com/survey3.png', 'Encuesta para Categoría 2', 100, 10, '33333333-3333-3333-3333-333333333333', 0, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 0, NULL, NOW(), NOW()),
+    ('77777777-7777-7777-7777-777777777777', 'Survey 2 - Cat 2', 'http://example.com/survey4.png', 'Otra encuesta para Categoría 2', 100, 20, '33333333-3333-3333-3333-333333333333', 0, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 1, NULL, NOW(), NOW()),
     ('88888888-8888-8888-8888-888888888888', 'Survey 3 - Cat 2', 'http://example.com/survey5.png', 'Otra encuesta para Categoría 2', 100, 20, '33333333-3333-3333-3333-333333333333', 1, 3600, '11111111-1111-1111-1111-111111111111', 1, 1, 0, NULL, NOW(), NOW());
 
 INSERT INTO question (id, content, image, points, allowed_answers, options, correct_answers, survey_id, created_at, updated_at) VALUES

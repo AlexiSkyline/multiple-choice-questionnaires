@@ -6,9 +6,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.skyline.mcq.domain.models.Survey;
+import org.skyline.mcq.domain.specification.SurveySpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.UUID;
@@ -61,52 +63,108 @@ class SurveyRepositoryTest {
     @Test
     @DisplayName("Test finding all surveys by category ID")
     void testFindAllSurveyByCategoryId() {
+
+        Specification<Survey> specRandomId = SurveySpecifications.hasCategoryId(UUID.randomUUID());
+        Specification<Survey> specIdCategory1 = SurveySpecifications.hasCategoryId(UUID.fromString(idCategory1));
+        Specification<Survey> specIdCategory2 = SurveySpecifications.hasCategoryId(UUID.fromString(idCategory2));
+
         assertAll(
-                () -> assertEquals(0, surveyRepository.findAllByCategoryId(UUID.randomUUID(), Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(2, surveyRepository.findAllByCategoryId(UUID.fromString(idCategory1), Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(3, surveyRepository.findAllByCategoryId(UUID.fromString(idCategory2), Pageable.unpaged()).getContent().size())
+                () -> assertEquals(0, surveyRepository.findAll(specRandomId, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(2, surveyRepository.findAll(specIdCategory1, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(3, surveyRepository.findAll(specIdCategory2, Pageable.unpaged()).getContent().size())
+        );
+    }
+
+    @Test
+    @DisplayName("Test finding all surveys by active")
+    void testFindAllSurveyByActive() {
+
+        Specification<Survey> specStatusTrue = SurveySpecifications.hasActive(true);
+        Specification<Survey> specStatusFalse = SurveySpecifications.hasActive(false);
+
+        assertAll(
+                () -> assertEquals(5, surveyRepository.findAll(specStatusTrue, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(0, surveyRepository.findAll(specStatusFalse, Pageable.unpaged()).getContent().size())
         );
     }
 
     @Test
     @DisplayName("Test finding all surveys by status")
     void testFindAllSurveyByStatus() {
+
+        Specification<Survey> specStatusTrue = SurveySpecifications.hasStatus(true);
+        Specification<Survey> specStatusFalse = SurveySpecifications.hasStatus(false);
+
         assertAll(
-                () -> assertEquals(2, surveyRepository.findAllByStatus(true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(3, surveyRepository.findAllByStatus(false, Pageable.unpaged()).getContent().size())
+                () -> assertEquals(2, surveyRepository.findAll(specStatusTrue, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(3, surveyRepository.findAll(specStatusFalse, Pageable.unpaged()).getContent().size())
         );
     }
 
     @Test
     @DisplayName("Test finding all surveys by category ID and status")
     void testFindAllSurveyByCategoryIdAndStatus() {
+
+        Specification<Survey> specRandomId = SurveySpecifications.hasCategoryIdAndStatus(UUID.randomUUID(), true);
+        Specification<Survey> specIdCategory1True = SurveySpecifications.hasCategoryIdAndStatus(UUID.fromString(idCategory1), true);
+        Specification<Survey> specIdCategory1False = SurveySpecifications.hasCategoryIdAndStatus(UUID.fromString(idCategory1), false);
+        Specification<Survey> specIdCategory2True = SurveySpecifications.hasCategoryIdAndStatus(UUID.fromString(idCategory2), true);
+        Specification<Survey> specIdCategory2False = SurveySpecifications.hasCategoryIdAndStatus(UUID.fromString(idCategory2), false);
+
         assertAll(
-                () -> assertEquals(0, surveyRepository.findAllByCategoryIdAndStatus(UUID.randomUUID(), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByCategoryIdAndStatus(UUID.fromString(idCategory1), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByCategoryIdAndStatus(UUID.fromString(idCategory1), false, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByCategoryIdAndStatus(UUID.fromString(idCategory2), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(2, surveyRepository.findAllByCategoryIdAndStatus(UUID.fromString(idCategory2), false, Pageable.unpaged()).getContent().size())
+                () -> assertEquals(0, surveyRepository.findAll(specRandomId, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specIdCategory1True, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specIdCategory1False, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specIdCategory2True, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(2, surveyRepository.findAll(specIdCategory2False, Pageable.unpaged()).getContent().size())
         );
     }
 
     @Test
     @DisplayName("Test finding all surveys by restricted access")
     void testFindAllSurveyByIsPublic() {
+
+        Specification<Survey> specAccessTrue = SurveySpecifications.hasRestrictedAccess(true);
+        Specification<Survey> specAccessFalse = SurveySpecifications.hasRestrictedAccess(false);
+
         assertAll(
-                () -> assertEquals(4, surveyRepository.findAllByHasRestrictedAccess(true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByHasRestrictedAccess(false, Pageable.unpaged()).getContent().size())
+                () -> assertEquals(4, surveyRepository.findAll(specAccessTrue, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specAccessFalse, Pageable.unpaged()).getContent().size())
         );
     }
 
     @Test
     @DisplayName("Test finding all surveys by category ID and restricted access")
     void testFindAllSurveyByCategoryIdAndIsPublic() {
+
+        Specification<Survey> specRandomId = SurveySpecifications.hasCategoryIdAndHasRestrictedAccess(UUID.randomUUID(), true);
+        Specification<Survey> specIdCategory1True = SurveySpecifications.hasCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory1), true);
+        Specification<Survey> specIdCategory1False = SurveySpecifications.hasCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory1), false);
+        Specification<Survey> specIdCategory2True = SurveySpecifications.hasCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory2), true);
+        Specification<Survey> specIdCategory2False = SurveySpecifications.hasCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory2), false);
+
         assertAll(
-                () -> assertEquals(0, surveyRepository.findAllByCategoryIdAndHasRestrictedAccess(UUID.randomUUID(), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory1), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(1, surveyRepository.findAllByCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory1), false, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(3, surveyRepository.findAllByCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory2), true, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(0, surveyRepository.findAllByCategoryIdAndHasRestrictedAccess(UUID.fromString(idCategory2), false, Pageable.unpaged()).getContent().size())
+                () -> assertEquals(0, surveyRepository.findAll(specRandomId, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specIdCategory1True, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(1, surveyRepository.findAll(specIdCategory1False, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(3, surveyRepository.findAll(specIdCategory2True, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(0, surveyRepository.findAll(specIdCategory2False, Pageable.unpaged()).getContent().size())
+        );
+    }
+
+    @Test
+    @DisplayName("Test finding all surveys by category ID and active")
+    void testFindAllSurveyByCategoryIdAndActive() {
+
+        String accountId = "11111111-1111-1111-1111-111111111111";
+        Specification<Survey> specRandomId = SurveySpecifications.hasAccountIdAndIsActive(UUID.randomUUID(), true);
+        Specification<Survey> specIdCategory1True = SurveySpecifications.hasAccountIdAndIsActive(UUID.fromString(accountId), true);
+        Specification<Survey> specIdCategory1False = SurveySpecifications.hasAccountIdAndIsActive(UUID.fromString(accountId), false);
+
+        assertAll(
+                () -> assertEquals(0, surveyRepository.findAll(specRandomId, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(2, surveyRepository.findAll(specIdCategory1True, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(3, surveyRepository.findAll(specIdCategory1False, Pageable.unpaged()).getContent().size())
         );
     }
 
@@ -137,5 +195,19 @@ class SurveyRepositoryTest {
         var survey = surveyRepository.findById(savedSurvey.getId())
                 .orElseThrow(() -> new RuntimeException("Survey not found"));
         assertFalse(survey.getActive());
+    }
+
+    @Test
+    @DisplayName("Test finding all accounts by survey ID")
+    void testListAccountsBySurveyId() {
+
+        var surveyId = UUID.fromString("44444444-4444-4444-4444-444444444444");
+
+        var result = surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyId, true, true, Pageable.unpaged());
+
+        assertAll(() -> {
+            assertFalse(result.isEmpty());
+            assertEquals(1, result.getContent().size());
+        });
     }
 }
