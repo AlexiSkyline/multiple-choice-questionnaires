@@ -32,7 +32,7 @@ public class Question {
     private String options;
     private String correctAnswers;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Survey survey;
 
     @CreationTimestamp
