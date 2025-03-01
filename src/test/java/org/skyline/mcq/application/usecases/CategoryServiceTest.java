@@ -11,7 +11,9 @@ import org.skyline.mcq.application.dtos.input.CategoryRequestDto;
 import org.skyline.mcq.application.dtos.output.CategoryResponseDto;
 import org.skyline.mcq.application.mappings.CategoryMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
+import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Category;
+import org.skyline.mcq.infrastructure.outputport.AccountRepository;
 import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -32,6 +34,9 @@ class CategoryServiceTest {
     private CategoryRepository categoryRepository;
 
     @Mock
+    private AccountRepository accountRepository;
+
+    @Mock
     private CategoryMapper categoryMapper;
 
     @Mock
@@ -40,6 +45,7 @@ class CategoryServiceTest {
     @InjectMocks
     private CategoryService categoryService;
 
+    private Account accountTest;
     private Category categoryTest;
     private CategoryResponseDto categoryResponseDtoTest;
     private CategoryRequestDto categoryRequestDtoTest;
@@ -50,6 +56,17 @@ class CategoryServiceTest {
 
     @BeforeEach
     void setUp() {
+
+        accountTest = Account.builder()
+                .id(UUID.randomUUID())
+                .firstName("Ethan")
+                .lastName("Miller")
+                .username("ethan_creator")
+                .email("ethan.miller@example.com")
+                .password("EthanPassword123")
+                .profileImage("creator2.jpg")
+                .description("Poll Maker")
+                .build();
 
         categoryTest = Category.builder()
                 .id(UUID.randomUUID())
@@ -69,6 +86,7 @@ class CategoryServiceTest {
                 .title("New Category")
                 .description("New Category")
                 .image("New_Category.png")
+                .accountId(accountTest.getId())
                 .build();
 
         List<Category> categories = List.of(
@@ -98,25 +116,137 @@ class CategoryServiceTest {
     @DisplayName("Save Category: Should persist and map category correctly")
     void testSaveCategory() {
 
-        given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
         given(categoryMapper.categoryToCategoryResponseDto(categoryTest)).willReturn(categoryResponseDtoTest);
+        given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
+        given(categoryMapper.categoryResquestDtoToCategory(categoryRequestDtoTest)).willReturn(categoryTest);
 
-        CategoryResponseDto result = categoryService.saveCategory(categoryTest);
+        Optional<CategoryResponseDto> result = categoryService.saveCategory(categoryRequestDtoTest);
 
         assertAll(() -> {
             assertNotNull(result);
-            assertEquals("New Category", result.getTitle());
-            assertEquals("New Category", result.getDescription());
-            assertEquals("New_Category.png", result.getImage());
+            assertTrue(result.isPresent());
         });
 
+        verify(accountRepository).findById(accountTest.getId());
         verify(categoryRepository, times(1)).save(categoryTest);
         verify(categoryMapper, times(1)).categoryToCategoryResponseDto(categoryTest);
+        verify(categoryMapper).categoryResquestDtoToCategory(categoryRequestDtoTest);
+    }
+
+    @Test
+    @DisplayName("Save Category: Should return empty when account is not found")
+    void testSaveCategoryAccountNotFound() {
+
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
+
+        Optional<CategoryResponseDto> result = categoryService.saveCategory(categoryRequestDtoTest);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertFalse(result.isPresent());
+        });
+
+        verify(accountRepository).findById(accountTest.getId());
+        verify(categoryRepository, never()).save(categoryTest);
+        verify(categoryMapper, never()).categoryToCategoryResponseDto(categoryTest);
+        verify(categoryMapper, never()).categoryResquestDtoToCategory(categoryRequestDtoTest);
     }
 
 
     @Test
-    @DisplayName("List Categories: Should return a page of active categories")
+    @DisplayName("List Categories by Account ID: Should return a page of categories by account ID")
+    void testListCategoriesByAccountId() {
+
+        given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
+        given(categoryRepository.findAllByAccountIdAndActiveIsTrue(accountId, pageable)).willReturn(categoryPage);
+        given(categoryMapper.categoryToCategoryResponseDto(any(Category.class))).willReturn(categoryResponseDtoTest);
+
+        Page<CategoryResponseDto> result = categoryService.listCategories(accountId, null, null, 0, 10);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertEquals(2, result.getContent().size());
+        });
+
+        verify(categoryRepository, times(1)).findAllByAccountIdAndActiveIsTrue(accountId, pageable);
+        verify(categoryMapper, times(2)).categoryToCategoryResponseDto(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("List Categories by Title and Active: Should return a page of categories by title and active")
+    void testListCategoriesByTitleActive() {
+
+        given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
+        given(categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", true, pageable)).willReturn(categoryPage);
+        given(categoryMapper.categoryToCategoryResponseDto(any(Category.class))).willReturn(categoryResponseDtoTest);
+
+        Page<CategoryResponseDto> result = categoryService.listCategories(null, title, true, 0, 10);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertEquals(2, result.getContent().size());
+        });
+
+        verify(categoryRepository, times(1)).findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", true, pageable);
+        verify(categoryMapper, times(2)).categoryToCategoryResponseDto(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("List Categories by Title and Inactive: Should return a page of categories by title and inactive")
+    void testListCategoriesByTitleInactive() {
+
+        given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
+        given(categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", false, pageable)).willReturn(categoryPage);
+        given(categoryMapper.categoryToCategoryResponseDto(any(Category.class))).willReturn(categoryResponseDtoTest);
+
+        Page<CategoryResponseDto> result = categoryService.listCategories(null, title, false, 0, 10);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertEquals(2, result.getContent().size());
+        });
+
+        verify(categoryRepository, times(1)).findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", false, pageable);
+        verify(categoryMapper, times(2)).categoryToCategoryResponseDto(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("List Categories by Empty Title and Active: Should return an empty page when title is empty and isActive is true")
+    void testListCategoriesByEmptyTitleActive() {
+
+        given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
+
+        Page<CategoryResponseDto> result = categoryService.listCategories(null, "", true, 0, 10);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertEquals(0, result.getContent().size());
+        });
+
+        verify(categoryRepository, never()).findAllByTitleIsLikeIgnoreCaseAndActive("%%", true, pageable);
+        verify(categoryMapper, never()).categoryToCategoryResponseDto(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("List Categories by Title and Null Active: Should return an empty page when title is provided but isActive is null")
+    void testListCategoriesByTitleActiveFailed() {
+
+        given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
+
+        Page<CategoryResponseDto> result = categoryService.listCategories(null, "category", null, 0, 10);
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertEquals(0, result.getContent().size());
+        });
+
+        verify(categoryRepository, never()).findAllByTitleIsLikeIgnoreCaseAndActive("%category%", null, pageable);
+        verify(categoryMapper, never()).categoryToCategoryResponseDto(any(Category.class));
+    }
+
+    @Test
+    @DisplayName("List Active Categories: Should return a page of active categories")
     void testListCategoriesActives() {
 
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
@@ -135,8 +265,8 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("List Categories: Should return a page of inactive categories")
-    void testListCategoriesInactives() {
+    @DisplayName("List Inactive Categories: Should return a page of inactive categories")
+    void testListCategoriesInactive() {
 
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
         given(categoryRepository.findAllByActive(false, pageable)).willReturn(categoryPage);
@@ -154,41 +284,38 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("List Categories:  Should return a page of categories by account ID")
-    void testListCategoriesByAccountId() {
+    @DisplayName("List Categories with Null Filters: Should return an empty page when no filters are provided")
+    void testListCategories() {
 
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
-        given(categoryRepository.findAllByAccountIdAndActiveIsTrue(accountId, pageable)).willReturn(categoryPage);
-        given(categoryMapper.categoryToCategoryResponseDto(any(Category.class))).willReturn(categoryResponseDtoTest);
 
-        Page<CategoryResponseDto> result = categoryService.listCategories(accountId, null, true, 0, 10);
+        Page<CategoryResponseDto> result = categoryService.listCategories(null, null, null, 0, 10);
 
         assertAll(() -> {
             assertNotNull(result);
-            assertEquals(2, result.getContent().size());
+            assertEquals(0, result.getContent().size());
         });
 
-        verify(categoryRepository, times(1)).findAllByAccountIdAndActiveIsTrue(accountId, pageable);
-        verify(categoryMapper, times(2)).categoryToCategoryResponseDto(any(Category.class));
+        verify(categoryRepository, never()).findAllByActive(false, pageable);
+        verify(categoryMapper, never()).categoryToCategoryResponseDto(any(Category.class));
     }
 
     @Test
-    @DisplayName("List Categories:  Should return a page of categories by title")
-    void testListCategoriesByTitle() {
+    @DisplayName("List Categories by Account ID: Should return an empty page when no categories are found for the account")
+    void testListCategoriesEmpty() {
 
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
-        given(categoryRepository.findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", true, pageable)).willReturn(categoryPage);
-        given(categoryMapper.categoryToCategoryResponseDto(any(Category.class))).willReturn(categoryResponseDtoTest);
+        given(categoryRepository.findAllByAccountIdAndActiveIsTrue(accountId, pageable)).willReturn(Page.empty());
 
-        Page<CategoryResponseDto> result = categoryService.listCategories(null, title, true, 0, 10);
+        Page<CategoryResponseDto> result = categoryService.listCategories(accountId, null, null, 0, 10);
 
         assertAll(() -> {
             assertNotNull(result);
-            assertEquals(2, result.getContent().size());
+            assertEquals(0, result.getContent().size());
         });
 
-        verify(categoryRepository, times(1)).findAllByTitleIsLikeIgnoreCaseAndActive("%" + title + "%", true, pageable);
-        verify(categoryMapper, times(2)).categoryToCategoryResponseDto(any(Category.class));
+        verify(categoryRepository, times(1)).findAllByAccountIdAndActiveIsTrue(accountId, pageable);
+        verify(categoryMapper, never()).categoryToCategoryResponseDto(any(Category.class));
     }
 
     @Test
@@ -272,6 +399,21 @@ class CategoryServiceTest {
     }
 
     @Test
+    @DisplayName("Delete Category: Should return false when category is inactive")
+    void testDeleteCategoryInactive() {
+
+        categoryTest.setActive(false);
+        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+
+        Boolean result = categoryService.deleteCategory(categoryTest.getId());
+
+        assertFalse(result);
+
+        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(0)).delete(categoryTest);
+    }
+
+    @Test
     @DisplayName("List Categories by Account ID: Should return a page of active categories for a given accountId")
     void testListCategoryByAccountId() {
 
@@ -293,7 +435,6 @@ class CategoryServiceTest {
 
         verify(categoryRepository, times(1)).findAllByAccountIdAndActiveIsTrue(accountId, pageable);
     }
-
 
     @Test
     @DisplayName("List Categories by Title: Should return a page of active categories for a given title")

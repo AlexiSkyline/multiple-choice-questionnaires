@@ -5,8 +5,10 @@ import org.skyline.mcq.application.dtos.input.CategoryRequestDto;
 import org.skyline.mcq.application.dtos.output.CategoryResponseDto;
 import org.skyline.mcq.application.mappings.CategoryMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
+import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.infrastructure.inputport.CategoryInputPort;
+import org.skyline.mcq.infrastructure.outputport.AccountRepository;
 import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,12 +25,20 @@ import java.util.concurrent.atomic.AtomicReference;
 public class CategoryService implements CategoryInputPort {
 
     private final CategoryRepository categoryRepository;
+    private final AccountRepository accountRepository;
     private final CategoryMapper categoryMapper;
     private final PaginationHelper paginationHelper;
 
     @Override
-    public CategoryResponseDto saveCategory(Category category) {
-        return categoryMapper.categoryToCategoryResponseDto(categoryRepository.save(category));
+    public Optional<CategoryResponseDto> saveCategory(CategoryRequestDto category) {
+        Optional<Account> account = accountRepository.findById(category.getAccountId()).filter(Account::getActive);
+
+        if (account.isEmpty()) return Optional.empty();
+
+        Category newCategory = categoryMapper.categoryResquestDtoToCategory(category);
+        newCategory.setAccount(account.get());
+
+        return Optional.of(categoryMapper.categoryToCategoryResponseDto(categoryRepository.save(newCategory)));
     }
 
     @Override
@@ -36,14 +46,18 @@ public class CategoryService implements CategoryInputPort {
 
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
 
-        Page<Category> categoryPage;
+        Page<Category> categoryPage = null;
 
-        if (accountId != null && title == null) {
+        if (accountId != null) {
             categoryPage = listCategoryByAccountId(accountId, pageRequest);
-        } else if (accountId == null && StringUtils.hasText(title)) {
+        } else if (StringUtils.hasText(title) && isActive != null) {
             categoryPage = listCategoryByTitle(title, isActive, pageRequest);
-        } else {
+        } else if (isActive != null) {
             categoryPage = categoryRepository.findAllByActive(isActive, pageRequest);
+        }
+
+        if (categoryPage == null || categoryPage.isEmpty()) {
+            return Page.empty();
         }
 
         return categoryPage.map(categoryMapper::categoryToCategoryResponseDto);
@@ -56,10 +70,7 @@ public class CategoryService implements CategoryInputPort {
 
         categoryRepository.findById(id).ifPresentOrElse(foundCategory -> {
             if (Boolean.TRUE.equals(foundCategory.getActive())) {
-                foundCategory.setTitle(category.getTitle());
-                foundCategory.setDescription(category.getDescription());
-                foundCategory.setImage(category.getImage());
-
+                categoryMapper.updateCategoryFromCategoryRequestDto(category, foundCategory);
                 Category updatedCategory = categoryRepository.save(foundCategory);
                 CategoryResponseDto responseDto = categoryMapper.categoryToCategoryResponseDto(updatedCategory);
 
