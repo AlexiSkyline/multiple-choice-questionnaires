@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputport;
 
+import org.skyline.mcq.application.dtos.output.AnswerResponseDto;
 import org.skyline.mcq.domain.models.Answer;
 import org.springframework.data.domain.Page;
 
@@ -7,6 +8,6 @@ import java.util.UUID;
 
 public interface AnswerInputPort {
 
-    Answer saveAnswer(Answer answer);
-    Page<Answer> listAnswerByResultId(UUID resultId, Integer pageNumber, Integer pageSize);
+    AnswerResponseDto saveAnswer(Answer answer);
+    Page<AnswerResponseDto> listAnswerByResultId(UUID resultId, Integer pageNumber, Integer pageSize);
 }
