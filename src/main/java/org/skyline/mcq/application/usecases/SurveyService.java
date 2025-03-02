@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,17 +28,20 @@ public class SurveyService implements SurveyInputPort {
     private final SurveyMapper surveyMapper;
 
     @Override
+    @Transactional
     public SurveyResponseDto saveSurvey(Survey survey) {
         return surveyMapper.surveyToSurveyResponseDto(surveyRepository.save(survey));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<SurveyResponseDto> findSurveyById(UUID id) {
         return Optional.ofNullable(surveyMapper.surveyToSurveyResponseDto(this.surveyRepository.findById(id)
                 .filter(Survey::getActive).orElse(null)));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SurveyResponseDto> listSurveys(UUID categoryId, Boolean status, Boolean hasRestrictedAccess, UUID accountId, Boolean isActive, Integer pageNumber, Integer pageSize) {
 
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
@@ -57,6 +61,7 @@ public class SurveyService implements SurveyInputPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Account> listAccountsBySurveyIdAndSurveyActiveAndUserActive(UUID surveyId, Boolean isActiveSurvey, Boolean isActiveAccount, Integer pageNumber, Integer pageSize) {
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
 
@@ -64,6 +69,7 @@ public class SurveyService implements SurveyInputPort {
     }
 
     @Override
+    @Transactional
     public Optional<SurveyResponseDto> updateSurvey(UUID id, Survey survey) {
 
         AtomicReference<Optional<SurveyResponseDto>> atomicReference = new AtomicReference<>();
@@ -83,6 +89,7 @@ public class SurveyService implements SurveyInputPort {
     }
 
     @Override
+    @Transactional
     public Boolean deleteSurvey(UUID id) {
 
         Optional<Survey> survey = surveyRepository.findById(id);

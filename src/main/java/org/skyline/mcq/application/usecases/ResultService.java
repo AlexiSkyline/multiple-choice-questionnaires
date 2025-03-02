@@ -9,6 +9,7 @@ import org.skyline.mcq.infrastructure.inputport.ResultInputPort;
 import org.skyline.mcq.infrastructure.outputport.ResultRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,23 +22,27 @@ public class ResultService implements ResultInputPort {
     private final PaginationHelper paginationHelper;
 
     @Override
+    @Transactional
     public ResultResponseDto saveResult(Result result) {
         return resultMapper.resultToResultResponseDto(this.resultRepository.save(result));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ResultResponseDto> listResultBySurveyId(UUID surveyId, Integer pageNumber, Integer pageSize) {
         return resultRepository.findAllByAccountId(surveyId, paginationHelper.buildPageRequest(pageNumber, pageSize))
                 .map(resultMapper::resultToResultResponseDto);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ResultResponseDto> listResultByAccountId(UUID accountId, Integer pageNumber, Integer pageSize) {
         return resultRepository.findAllByAccountId(accountId, paginationHelper.buildPageRequest(pageNumber, pageSize))
                 .map(resultMapper::resultToResultResponseDto);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ResultResponseDto> listResultBySurveyIdAndAccountId(UUID surveyId, UUID accountId, Integer pageNumber, Integer pageSize) {
         return resultRepository.findAllByAccountIdAndSurveyId(accountId, surveyId, paginationHelper.buildPageRequest(pageNumber, pageSize))
                 .map(resultMapper::resultToResultResponseDto);

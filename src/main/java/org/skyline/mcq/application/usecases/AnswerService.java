@@ -9,6 +9,7 @@ import org.skyline.mcq.infrastructure.inputport.AnswerInputPort;
 import org.skyline.mcq.infrastructure.outputport.AnswerRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,11 +22,13 @@ public class AnswerService implements AnswerInputPort {
     private final AnswerMapper answerMapper;
 
     @Override
+    @Transactional
     public AnswerResponseDto saveAnswer(Answer answer) {
         return answerMapper.answerToAnswerResponseDto(answerRepository.save(answer));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<AnswerResponseDto> listAnswerByResultId(UUID resultId, Integer pageNumber, Integer pageSize) {
         return answerRepository.findAllByResultId(resultId , paginationHelper.buildPageRequest(pageNumber, pageSize))
                 .map(answerMapper::answerToAnswerResponseDto);

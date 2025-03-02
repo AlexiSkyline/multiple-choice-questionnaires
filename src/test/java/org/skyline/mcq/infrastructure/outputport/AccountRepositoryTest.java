@@ -114,4 +114,30 @@ class AccountRepositoryTest {
 
         assertFalse(accountRepository.findById(accountSaved.getId()).isPresent());
     }
+
+    @Test
+    void testGetAccountByUsername() {
+
+        var account = accountRepository.findAll().getFirst();
+
+        var accountByUsername = accountRepository.findByUsername(account.getUsername());
+
+        assertNotNull(account);
+        assertNotNull(accountByUsername);
+        assertTrue(accountByUsername.isPresent());
+        assertEquals(account.getUsername(), accountByUsername.get().getUsername());
+    }
+
+    @Test
+    void testGetAccountByEmail() {
+
+        var account = accountRepository.findAll().getFirst();
+
+        var accountByEmail = accountRepository.findByEmail(account.getEmail());
+
+        assertNotNull(account);
+        assertNotNull(accountByEmail);
+        assertTrue(accountByEmail.isPresent());
+        assertEquals(account.getEmail(), accountByEmail.get().getEmail());
+    }
 }

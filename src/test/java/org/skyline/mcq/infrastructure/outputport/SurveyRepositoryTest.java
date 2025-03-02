@@ -83,8 +83,8 @@ class SurveyRepositoryTest {
         Specification<Survey> specStatusFalse = SurveySpecifications.hasActive(false);
 
         assertAll(
-                () -> assertEquals(5, surveyRepository.findAll(specStatusTrue, Pageable.unpaged()).getContent().size()),
-                () -> assertEquals(0, surveyRepository.findAll(specStatusFalse, Pageable.unpaged()).getContent().size())
+                () -> assertEquals(2, surveyRepository.findAll(specStatusTrue, Pageable.unpaged()).getContent().size()),
+                () -> assertEquals(3, surveyRepository.findAll(specStatusFalse, Pageable.unpaged()).getContent().size())
         );
     }
 

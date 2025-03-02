@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
@@ -30,6 +31,7 @@ public class CategoryService implements CategoryInputPort {
     private final PaginationHelper paginationHelper;
 
     @Override
+    @Transactional
     public Optional<CategoryResponseDto> saveCategory(CategoryRequestDto category) {
         Optional<Account> account = accountRepository.findById(category.getAccountId()).filter(Account::getActive);
 
@@ -42,6 +44,7 @@ public class CategoryService implements CategoryInputPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryResponseDto> listCategories(UUID accountId, String title, Boolean isActive, Integer pageNumber, Integer pageSize) {
 
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
@@ -64,6 +67,7 @@ public class CategoryService implements CategoryInputPort {
     }
 
     @Override
+    @Transactional
     public Optional<CategoryResponseDto> updateCategory(UUID id, CategoryRequestDto category) {
 
         AtomicReference<Optional<CategoryResponseDto>> atomicReference = new AtomicReference<>();
@@ -84,6 +88,7 @@ public class CategoryService implements CategoryInputPort {
     }
 
     @Override
+    @Transactional
     public Boolean deleteCategory(UUID id) {
 
         Optional<Category> category = categoryRepository.findById(id);

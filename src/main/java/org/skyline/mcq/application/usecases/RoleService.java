@@ -9,6 +9,7 @@ import org.skyline.mcq.domain.models.Role;
 import org.skyline.mcq.infrastructure.inputport.RoleInputPort;
 import org.skyline.mcq.infrastructure.outputport.RoleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -20,6 +21,7 @@ public class RoleService implements RoleInputPort {
     private final RoleMapper roleMapper;
 
     @Override
+    @Transactional
     public Optional<RoleResponseDto> saveRole(RoleRequestDto role) {
 
         Optional<Role> roleFound = roleRepository.findByName(role.getName());
@@ -32,6 +34,7 @@ public class RoleService implements RoleInputPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<RoleResponseDto> findByName(TypeRole name) {
         return Optional.ofNullable(roleMapper.roleToRoleResponseDto(this.roleRepository.findByName(name).orElse(null)));
     }
