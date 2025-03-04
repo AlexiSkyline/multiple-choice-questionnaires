@@ -11,7 +11,7 @@ import org.skyline.mcq.domain.models.Category;
 @Mapper
 public interface CategoryMapper {
 
-    Category categoryResquestDtoToCategory(CategoryRequestDto categoryRequestDto);
+    Category categoryRequestDtoToCategory(CategoryRequestDto categoryRequestDto);
     CategoryResponseDto categoryToCategoryResponseDto(Category category);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.skyline.mcq.application.dtos.output.AnswerResponseDto;
 import org.skyline.mcq.domain.models.Answer;
 
-@Mapper(uses = {QuestionMapper.class, ResultMapper.class, AnswerMapper.class})
+@Mapper(uses = {QuestionMapper.class, AccountMapper.class, ResultMapper.class})
 public interface AnswerMapper {
 
     AnswerResponseDto answerToAnswerResponseDto(Answer answer);

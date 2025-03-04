@@ -37,7 +37,7 @@ public class CategoryService implements CategoryInputPort {
 
         if (account.isEmpty()) return Optional.empty();
 
-        Category newCategory = categoryMapper.categoryResquestDtoToCategory(category);
+        Category newCategory = categoryMapper.categoryRequestDtoToCategory(category);
         newCategory.setAccount(account.get());
 
         return Optional.of(categoryMapper.categoryToCategoryResponseDto(categoryRepository.save(newCategory)));

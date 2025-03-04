@@ -119,7 +119,7 @@ class CategoryServiceTest {
         given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
         given(categoryMapper.categoryToCategoryResponseDto(categoryTest)).willReturn(categoryResponseDtoTest);
         given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
-        given(categoryMapper.categoryResquestDtoToCategory(categoryRequestDtoTest)).willReturn(categoryTest);
+        given(categoryMapper.categoryRequestDtoToCategory(categoryRequestDtoTest)).willReturn(categoryTest);
 
         Optional<CategoryResponseDto> result = categoryService.saveCategory(categoryRequestDtoTest);
 
@@ -131,7 +131,7 @@ class CategoryServiceTest {
         verify(accountRepository).findById(accountTest.getId());
         verify(categoryRepository, times(1)).save(categoryTest);
         verify(categoryMapper, times(1)).categoryToCategoryResponseDto(categoryTest);
-        verify(categoryMapper).categoryResquestDtoToCategory(categoryRequestDtoTest);
+        verify(categoryMapper).categoryRequestDtoToCategory(categoryRequestDtoTest);
     }
 
     @Test
@@ -150,7 +150,7 @@ class CategoryServiceTest {
         verify(accountRepository).findById(accountTest.getId());
         verify(categoryRepository, never()).save(categoryTest);
         verify(categoryMapper, never()).categoryToCategoryResponseDto(categoryTest);
-        verify(categoryMapper, never()).categoryResquestDtoToCategory(categoryRequestDtoTest);
+        verify(categoryMapper, never()).categoryRequestDtoToCategory(categoryRequestDtoTest);
     }
 
 
