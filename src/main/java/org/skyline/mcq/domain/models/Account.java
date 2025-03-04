@@ -1,5 +1,6 @@
 package org.skyline.mcq.domain.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -51,6 +52,7 @@ public class Account {
     private Set<Role> roles = new HashSet<>();
 
     @Builder.Default
+    @JsonManagedReference
     @OneToMany(mappedBy = "account")
     private Set<Category> categories = new HashSet<>();
 

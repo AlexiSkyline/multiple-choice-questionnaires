@@ -3,7 +3,6 @@ package org.skyline.mcq.application.dtos.output;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.skyline.mcq.domain.models.Account;
 
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -16,7 +15,7 @@ public class CategoryResponseDto {
     private String title;
     private String description;
     private String image;
-    private Account account;
+    private AccountSummaryDto account;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 }

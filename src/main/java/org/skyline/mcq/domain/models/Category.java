@@ -1,5 +1,6 @@
 package org.skyline.mcq.domain.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,6 +32,7 @@ public class Category {
     private String image;
 
     @ManyToOne
+    @JsonBackReference
     private Account account;
 
     @Builder.Default
