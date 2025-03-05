@@ -67,8 +67,7 @@ class CategoryAPITest {
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryRequestDtoTest)))
-                .andExpect(status().isCreated())
-                .andReturn();
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -80,8 +79,7 @@ class CategoryAPITest {
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryRequestDtoTest)))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                .andExpect(status().isNotFound());
     }
 
     @Test

@@ -17,5 +17,4 @@ public class QuestionResponseDto {
     private Integer allowedAnswers;
     private String options;
     private String correctAnswers;
-    private SurveyResponseDto survey;
 }

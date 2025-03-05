@@ -59,6 +59,7 @@ public class Survey {
     @Column(nullable = true, length = 60)
     private String password;
 
+    @Builder.Default
     @JsonManagedReference
     @OneToMany(mappedBy = "survey")
     private Set<Question> questions = new HashSet<>();

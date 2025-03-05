@@ -1,6 +1,7 @@
 package org.skyline.mcq.infrastructure.http;
 
 import lombok.AllArgsConstructor;
+import org.skyline.mcq.domain.exceptions.ConflictException;
 import org.skyline.mcq.domain.exceptions.NotFoundException;
 import org.skyline.mcq.infrastructure.http.dto.ErrorResponse;
 import org.skyline.mcq.infrastructure.http.dto.ExceptionModel;
@@ -45,16 +46,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex, WebRequest request) {
+        return new ResponseEntity<>(getErrorResponse(ex, request), HttpStatus.NOT_FOUND);
+    }
 
-        ErrorResponse errorResponse = new ErrorResponse(
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex, WebRequest request) {
+        return new ResponseEntity<>(getErrorResponse(ex, request), HttpStatus.CONFLICT);
+    }
+
+    private ErrorResponse getErrorResponse(RuntimeException ex, WebRequest request) {
+        return new ErrorResponse(
                 LocalDateTime.now().toString(),
                 HttpStatus.NOT_FOUND.value(),
                 HttpStatus.NOT_FOUND,
                 HttpStatus.NOT_FOUND.getReasonPhrase(),
                 ex.getMessage(),
-                request.getDescription(false)   // Ruta
+                request.getDescription(false)
         );
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 }

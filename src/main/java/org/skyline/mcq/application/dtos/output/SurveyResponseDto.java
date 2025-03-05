@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,5 +24,6 @@ public class SurveyResponseDto {
     private Integer attempts;
     private Boolean hasRestrictedAccess;
     private Boolean status;
-    private Set<QuestionSummaryDto> questions;
+    @Builder.Default
+    private Set<QuestionSummaryDto> questions = new HashSet<>();
 }
