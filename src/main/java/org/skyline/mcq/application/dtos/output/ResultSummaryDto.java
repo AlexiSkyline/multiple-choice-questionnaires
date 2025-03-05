@@ -1,0 +1,23 @@
+package org.skyline.mcq.application.dtos.output;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.sql.Timestamp;
+import java.util.UUID;
+
+@Builder
+@Getter @Setter
+public class ResultSummaryDto {
+
+    private UUID id;
+    private SurveySummaryDto survey;
+    private AccountSummaryDto account;
+    private Timestamp startTime;
+    private Timestamp endTime;
+    private Integer duration;
+    private Integer totalPoints;
+    private Integer correctAnswers;
+    private Integer incorrectAnswers;
+}

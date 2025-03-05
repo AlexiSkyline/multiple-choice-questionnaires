@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,6 +87,41 @@ class ResultServiceTest {
 
         verify(resultRepository).save(resultTest);
         verify(resultMapper).resultToResultResponseDto(resultTest);
+    }
+
+    @Test
+    @DisplayName("Find Result by ID: Should return a result for a given ID")
+    void testFindResultById() {
+
+        given(resultRepository.findById(resultTest.getId())).willReturn(java.util.Optional.of(resultTest));
+        given(resultMapper.resultToResultResponseDto(resultTest)).willReturn(resultResponseDtoTest);
+
+        var resultResponseDto = resultService.findResultById(resultTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(resultResponseDto);
+            assertEquals(resultResponseDtoTest, resultResponseDto.get());
+        });
+
+        verify(resultRepository).findById(resultTest.getId());
+        verify(resultMapper).resultToResultResponseDto(resultTest);
+    }
+
+    @Test
+    @DisplayName("Find Result by ID: Should return an empty optional when result is not found")
+    void testFindResultByIdNotFound() {
+
+        given(resultRepository.findById(resultTest.getId())).willReturn(java.util.Optional.empty());
+
+        var resultResponseDto = resultService.findResultById(resultTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(resultResponseDto);
+            assertTrue(resultResponseDto.isEmpty());
+        });
+
+        verify(resultRepository).findById(resultTest.getId());
+        verify(resultMapper, never()).resultToResultResponseDto(resultTest);
     }
 
     @Test

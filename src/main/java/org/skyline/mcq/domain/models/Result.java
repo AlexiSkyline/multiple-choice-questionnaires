@@ -8,6 +8,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,8 +44,9 @@ public class Result {
     private Integer correctAnswers;
     private Integer incorrectAnswers;
 
+    @Builder.Default
     @OneToMany(mappedBy = "result")
-    private Set<Answer> answers;
+    private Set<Answer> answers = new HashSet<>();
 
     @CreationTimestamp
     @Column(updatable = false)

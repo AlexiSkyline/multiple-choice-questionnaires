@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,6 +26,13 @@ public class ResultService implements ResultInputPort {
     @Transactional
     public ResultResponseDto saveResult(Result result) {
         return resultMapper.resultToResultResponseDto(this.resultRepository.save(result));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ResultResponseDto> findResultById(UUID id) {
+        return resultRepository.findById(id)
+                .map(resultMapper::resultToResultResponseDto);
     }
 
     @Override
