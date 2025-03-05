@@ -11,6 +11,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,7 +47,8 @@ public class Category {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
+    @Builder.Default
     @JsonManagedReference
     @OneToMany(mappedBy = "category")
-    private Set<Survey> surveys;
+    private Set<Survey> surveys = new HashSet<>();
 }

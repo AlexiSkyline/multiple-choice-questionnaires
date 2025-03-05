@@ -35,6 +35,14 @@ public class AccountService implements AccountInputPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<AccountSummaryDto> getAccountById(UUID id) {
+        return this.accountRepository.findById(id)
+                .filter(Account::getActive)
+                .map(accountMapper::accountToAccountResponseDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<AccountSummaryDto> getUserByEmail(String email) {
         return this.accountRepository.findByEmail(email)
                 .filter(Account::getActive)

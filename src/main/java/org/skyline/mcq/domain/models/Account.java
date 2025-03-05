@@ -56,9 +56,10 @@ public class Account {
     @OneToMany(mappedBy = "account")
     private Set<Category> categories = new HashSet<>();
 
-    @OneToMany(mappedBy = "account")
+    @Builder.Default
     @JsonManagedReference
-    private Set<Survey> surveys;
+    @OneToMany(mappedBy = "account")
+    private Set<Survey> surveys = new HashSet<>();
 
     @CreationTimestamp
     @Column(updatable = false)

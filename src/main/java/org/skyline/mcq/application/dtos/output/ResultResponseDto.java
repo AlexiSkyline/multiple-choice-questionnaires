@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
-import java.util.Set;
 import java.util.UUID;
 
 @Builder
@@ -21,5 +20,4 @@ public class ResultResponseDto {
     private Integer totalPoints;
     private Integer correctAnswers;
     private Integer incorrectAnswers;
-    private Set<AnswerResponseDto> answers;
 }

@@ -150,6 +150,42 @@ class AccountServiceTest {
     }
 
     @Test
+    @DisplayName("Get Account by Id: Should return the account summary DTO when the account exists and is active")
+    void testGetAccountById() {
+
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+        given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accountSummaryDtoTest);
+
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.getAccountById(accountTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(accountSummaryDto);
+            assertTrue(accountSummaryDto.isPresent());
+            assertEquals(accountSummaryDtoTest, accountSummaryDto.get());
+        });
+
+        verify(accountRepository).findById(accountTest.getId());
+        verify(accountMapper).accountToAccountResponseDto(accountTest);
+    }
+
+    @Test
+    @DisplayName("Get Account by Id: Should return empty when the account does not exist")
+    void testGetAccountByIdWhenAccountNotFound() {
+
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
+
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.getAccountById(accountTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(accountSummaryDto);
+            assertTrue(accountSummaryDto.isEmpty());
+        });
+
+        verify(accountRepository).findById(accountTest.getId());
+        verify(accountMapper, never()).accountToAccountResponseDto(accountTest);
+    }
+
+    @Test
     @DisplayName("Get User by Email: Should return the account summary DTO when the account exists and is active")
     void testGetUserByEmail() {
 
