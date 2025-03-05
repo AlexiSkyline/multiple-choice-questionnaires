@@ -7,11 +7,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyline.mcq.application.dtos.input.SurveyRequestDto;
+import org.skyline.mcq.application.dtos.input.SurveyUpdateRequestDto;
+import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
 import org.skyline.mcq.application.dtos.output.SurveyResponseDto;
+import org.skyline.mcq.application.mappings.AccountMapper;
 import org.skyline.mcq.application.mappings.SurveyMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
 import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.domain.models.Survey;
+import org.skyline.mcq.infrastructure.outputport.AccountRepository;
+import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.skyline.mcq.infrastructure.outputport.SurveyRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,18 +38,31 @@ class SurveyServiceTest {
     private SurveyRepository surveyRepository;
 
     @Mock
+    private AccountRepository accountRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @Mock
     private PaginationHelper paginationHelper;
 
     @Mock
     private SurveyMapper surveyMapper;
+
+    @Mock
+    private AccountMapper accountMapper;
 
     @InjectMocks
     private SurveyService surveyService;
 
     private Survey surveyTest;
     private SurveyResponseDto surveyResponseDtoTest;
+    private SurveyRequestDto surveyRequestDtoTest;
+    private Account accountTest;
+    private Category categoryTest;
+    private SurveyUpdateRequestDto surveyUpdateRequestDtoTest;
     private PageRequest pageable;
-    private List<Account> accounts;
+    private List<AccountSummaryDto> accounts;
     private Page<Account> accountPage;
     private Page<Survey> surveyPage;
 
@@ -75,7 +95,7 @@ class SurveyServiceTest {
                 .build();
         pageable = PageRequest.of(0, 10);
 
-        Account newAccount = Account.builder()
+        accountTest = Account.builder()
                 .firstName("Sky")
                 .lastName("Taylor")
                 .username("sky_responder")
@@ -85,8 +105,48 @@ class SurveyServiceTest {
                 .description("New Sky responder")
                 .build();
 
-        accounts = List.of(newAccount);
-        accountPage = new PageImpl<>(accounts, pageable, accounts.size());
+        categoryTest = Category.builder()
+                .id(UUID.randomUUID())
+                .title("New Category")
+                .description("New Category")
+                .image("New_Category.png")
+                .active(true)
+                .build();
+
+        surveyRequestDtoTest = SurveyRequestDto.builder()
+                .title("new title")
+                .description("new description")
+                .image("survey.png")
+                .maxPoints(10)
+                .questionCount(5)
+                .timeLimit(3600)
+                .attempts(1)
+                .hasRestrictedAccess(true)
+                .accountId(accountTest.getId())
+                .categoryId(categoryTest.getId())
+                .build();
+
+        surveyUpdateRequestDtoTest = SurveyUpdateRequestDto.builder()
+                .title("new title")
+                .description("new description")
+                .image("survey.png")
+                .maxPoints(10)
+                .questionCount(5)
+                .timeLimit(3600)
+                .attempts(1)
+                .hasRestrictedAccess(true)
+                .build();
+
+        AccountSummaryDto accountSummaryDtoTest = AccountSummaryDto.builder()
+                .id(UUID.randomUUID())
+                .firstName("Sky")
+                .lastName("Taylor")
+                .username("sky_responder")
+                .email("sky@gmail.com")
+                .build();
+
+        accounts = Collections.singletonList(accountSummaryDtoTest);
+        accountPage = new PageImpl<>(Collections.singletonList(accountTest), pageable, 1);
         surveyPage = new PageImpl<>(Collections.singletonList(surveyTest), pageable, 1);
     }
 
@@ -94,18 +154,66 @@ class SurveyServiceTest {
     @DisplayName("Save Survey: Should save a survey and return the response DTO")
     void testSaveSurvey() {
 
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
         given(surveyRepository.save(surveyTest)).willReturn(surveyTest);
         given(surveyMapper.surveyToSurveyResponseDto(surveyTest)).willReturn(surveyResponseDtoTest);
+        given(surveyMapper.surveyRequesttDtoToSurvey(surveyRequestDtoTest)).willReturn(surveyTest);
 
-        var result = surveyService.saveSurvey(surveyTest);
+        var result = surveyService.saveSurvey(surveyRequestDtoTest);
 
         assertAll("Save Survey",
                 () -> assertNotNull(result, "The result should not be null"),
-                () -> assertEquals(surveyResponseDtoTest, result, "The result should match the expected DTO")
+                () -> assertTrue(result.isPresent(), "The result should be present"),
+                () -> assertEquals(surveyResponseDtoTest, result.get(), "The result should match the expected DTO")
         );
 
+        verify(accountRepository).findById(accountTest.getId());
+        verify(categoryRepository).findById(categoryTest.getId());
         verify(surveyRepository).save(surveyTest);
         verify(surveyMapper).surveyToSurveyResponseDto(surveyTest);
+    }
+
+    @Test
+    @DisplayName("Save Survey: Should not save a survey when the account does not exist")
+    void testSaveSurveyAccountNotFound() {
+
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
+        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
+
+        var result = surveyService.saveSurvey(surveyRequestDtoTest);
+
+        assertAll("Save Survey - Account Not Found",
+                () -> assertNotNull(result, "The result should not be null"),
+                () -> assertTrue(result.isEmpty(), "The result should be empty")
+        );
+
+        verify(accountRepository).findById(accountTest.getId());
+        verify(categoryRepository).findById(categoryTest.getId());
+        verify(surveyRepository, never()).save(surveyTest);
+        verify(surveyMapper, never()).surveyToSurveyResponseDto(surveyTest);
+    }
+
+    @Test
+    @DisplayName("Save Survey: Should not save a survey when the category does not exist")
+    void testSaveSurveyCategoryNotFound() {
+
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
+        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
+
+        var result = surveyService.saveSurvey(surveyRequestDtoTest);
+
+        assertAll("Save Survey - Category Not Found",
+                () -> assertNotNull(result, "The result should not be null"),
+                () -> assertTrue(result.isEmpty(), "The result should be empty")
+        );
+
+        verify(accountRepository).findById(accountTest.getId());
+        verify(categoryRepository).findById(categoryTest.getId());
+        verify(surveyRepository, never()).save(surveyTest);
+        verify(surveyMapper, never()).surveyToSurveyResponseDto(surveyTest);
     }
 
     @Test
@@ -184,6 +292,7 @@ class SurveyServiceTest {
     void testListAccountsBySurveyIdSurveyActiveAndAccountActive() {
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
         given(surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, true, pageable)).willReturn(accountPage);
+        given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accounts.getFirst());
 
         var result = surveyService.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, true, 0, 10);
 
@@ -191,6 +300,7 @@ class SurveyServiceTest {
         assertEquals(accounts.size(), result.getContent().size(), "The number of accounts should match");
 
         verify(surveyRepository).listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, true, pageable);
+        verify(accountMapper).accountToAccountResponseDto(accountTest);
     }
 
     @Test
@@ -198,6 +308,7 @@ class SurveyServiceTest {
     void testListAccountsBySurveyIdSurveyActiveAndAccountInactive() {
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
         given(surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, false, pageable)).willReturn(accountPage);
+        given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accounts.getFirst());
 
         var result = surveyService.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, false, 0, 10);
 
@@ -205,6 +316,7 @@ class SurveyServiceTest {
         assertEquals(accounts.size(), result.getContent().size(), "The number of accounts should match");
 
         verify(surveyRepository).listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), true, false, pageable);
+        verify(accountMapper).accountToAccountResponseDto(accountTest);
     }
 
     @Test
@@ -212,6 +324,7 @@ class SurveyServiceTest {
     void testListAccountsBySurveyIdSurveyInactiveAndAccountActive() {
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
         given(surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, true, pageable)).willReturn(accountPage);
+        given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accounts.getFirst());
 
         var result = surveyService.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, true, 0, 10);
 
@@ -219,6 +332,7 @@ class SurveyServiceTest {
         assertEquals(accounts.size(), result.getContent().size(), "The number of accounts should match");
 
         verify(surveyRepository).listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, true, pageable);
+        verify(accountMapper).accountToAccountResponseDto(accountTest);
     }
 
     @Test
@@ -226,6 +340,7 @@ class SurveyServiceTest {
     void testListAccountsBySurveyIdSurveyInactiveAndAccountInactive() {
         given(paginationHelper.buildPageRequest(0, 10)).willReturn(pageable);
         given(surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, false, pageable)).willReturn(accountPage);
+        given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accounts.getFirst());
 
         var result = surveyService.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, false, 0, 10);
 
@@ -233,6 +348,7 @@ class SurveyServiceTest {
         assertEquals(accounts.size(), result.getContent().size(), "The number of accounts should match");
 
         verify(surveyRepository).listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyTest.getId(), false, false, pageable);
+        verify(accountMapper).accountToAccountResponseDto(accountTest);
     }
 
     @Test
@@ -242,7 +358,7 @@ class SurveyServiceTest {
         given(surveyRepository.save(surveyTest)).willReturn(surveyTest);
         given(surveyMapper.surveyToSurveyResponseDto(surveyTest)).willReturn(surveyResponseDtoTest);
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isPresent(), "Survey should be updated successfully");
 
@@ -256,7 +372,7 @@ class SurveyServiceTest {
     void testUpdateSurveyNotFound() {
         given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.empty());
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isEmpty(), "Survey should not be updated if not found");
 
@@ -271,7 +387,7 @@ class SurveyServiceTest {
         surveyTest.setActive(false);
         given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isEmpty(), "Survey should not be updated if it is inactive");
 

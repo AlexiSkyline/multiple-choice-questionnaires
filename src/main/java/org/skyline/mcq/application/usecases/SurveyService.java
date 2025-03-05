@@ -1,13 +1,20 @@
 package org.skyline.mcq.application.usecases;
 
 import lombok.RequiredArgsConstructor;
+import org.skyline.mcq.application.dtos.input.SurveyRequestDto;
+import org.skyline.mcq.application.dtos.input.SurveyUpdateRequestDto;
+import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
 import org.skyline.mcq.application.dtos.output.SurveyResponseDto;
+import org.skyline.mcq.application.mappings.AccountMapper;
 import org.skyline.mcq.application.mappings.SurveyMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
 import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.domain.models.Survey;
 import org.skyline.mcq.domain.specification.SurveySpecifications;
 import org.skyline.mcq.infrastructure.inputport.SurveyInputPort;
+import org.skyline.mcq.infrastructure.outputport.AccountRepository;
+import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.skyline.mcq.infrastructure.outputport.SurveyRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,13 +31,25 @@ import java.util.concurrent.atomic.AtomicReference;
 public class SurveyService implements SurveyInputPort {
 
     private final SurveyRepository surveyRepository;
+    private final AccountRepository accountRepository;
+    private final CategoryRepository categoryRepository;
     private final PaginationHelper paginationHelper;
     private final SurveyMapper surveyMapper;
+    private final AccountMapper accountMapper;
 
     @Override
     @Transactional
-    public SurveyResponseDto saveSurvey(Survey survey) {
-        return surveyMapper.surveyToSurveyResponseDto(surveyRepository.save(survey));
+    public Optional<SurveyResponseDto> saveSurvey(SurveyRequestDto survey) {
+        Optional<Account> account = accountRepository.findById(survey.getAccountId()).filter(Account::getActive);
+        Optional<Category> category = categoryRepository.findById(survey.getCategoryId()).filter(Category::getActive);
+
+        if (account.isEmpty() || category.isEmpty()) return Optional.empty();
+
+        Survey newSurvey = surveyMapper.surveyRequesttDtoToSurvey(survey);
+        newSurvey.setAccount(account.get());
+        newSurvey.setCategory(category.get());
+
+        return Optional.of(surveyMapper.surveyToSurveyResponseDto(surveyRepository.save(newSurvey)));
     }
 
     @Override
@@ -62,22 +81,23 @@ public class SurveyService implements SurveyInputPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Account> listAccountsBySurveyIdAndSurveyActiveAndUserActive(UUID surveyId, Boolean isActiveSurvey, Boolean isActiveAccount, Integer pageNumber, Integer pageSize) {
+    public Page<AccountSummaryDto> listAccountsBySurveyIdAndSurveyActiveAndUserActive(UUID surveyId, Boolean isActiveSurvey, Boolean isActiveAccount, Integer pageNumber, Integer pageSize) {
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
 
-        return this.surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyId, isActiveSurvey, isActiveAccount, pageRequest);
+        return this.surveyRepository.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyId, isActiveSurvey, isActiveAccount, pageRequest)
+                .map(accountMapper::accountToAccountResponseDto);
     }
 
     @Override
     @Transactional
-    public Optional<SurveyResponseDto> updateSurvey(UUID id, Survey survey) {
+    public Optional<SurveyResponseDto> updateSurvey(UUID id, SurveyUpdateRequestDto survey) {
 
         AtomicReference<Optional<SurveyResponseDto>> atomicReference = new AtomicReference<>();
 
         surveyRepository.findById(id).ifPresentOrElse(surveyFound -> {
-            if (Boolean.TRUE.equals(survey.getActive())) {
-                Survey updatedSurvey = surveyRepository.save(surveyFound);
-                SurveyResponseDto surveyResponseDto = surveyMapper.surveyToSurveyResponseDto(updatedSurvey);
+            if (Boolean.TRUE.equals(surveyFound.getActive())) {
+                surveyMapper.updateSurveyFromSurveyUpdateRequestDto(survey, surveyFound);
+                SurveyResponseDto surveyResponseDto = surveyMapper.surveyToSurveyResponseDto(surveyRepository.save(surveyFound));
 
                 atomicReference.set(Optional.of(surveyResponseDto));
             } else {

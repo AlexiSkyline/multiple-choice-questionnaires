@@ -1,6 +1,7 @@
 package org.skyline.mcq.domain.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,6 +46,7 @@ public class Category {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "category")
     private Set<Survey> surveys;
 }

@@ -6,11 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.UUID;
-
 @Builder
-@Getter @Setter
-public class SurveyRequestDto {
+@Getter
+@Setter
+public class SurveyUpdateRequestDto {
 
     @NotNull
     @NotBlank
@@ -29,13 +28,7 @@ public class SurveyRequestDto {
     private Integer questionCount;
 
     @NotNull
-    private UUID categoryId;
-
-    @NotNull
     private Integer timeLimit;
-
-    @NotNull
-    private UUID accountId;
 
     @NotNull
     private Integer attempts;

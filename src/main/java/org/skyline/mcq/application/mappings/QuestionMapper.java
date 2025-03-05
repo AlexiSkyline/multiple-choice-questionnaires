@@ -9,7 +9,7 @@ import org.skyline.mcq.application.dtos.input.QuestionUpdateRequestDto;
 import org.skyline.mcq.application.dtos.output.QuestionResponseDto;
 import org.skyline.mcq.domain.models.Question;
 
-@Mapper(uses = {SurveyMapper.class})
+@Mapper
 public interface QuestionMapper {
 
     QuestionResponseDto questionToQuestionResponseDto(Question question);

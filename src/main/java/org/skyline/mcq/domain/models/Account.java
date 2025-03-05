@@ -57,6 +57,7 @@ public class Account {
     private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "account")
+    @JsonManagedReference
     private Set<Survey> surveys;
 
     @CreationTimestamp

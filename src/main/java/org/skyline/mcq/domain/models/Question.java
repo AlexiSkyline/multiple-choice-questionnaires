@@ -1,5 +1,6 @@
 package org.skyline.mcq.domain.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,6 +33,7 @@ public class Question {
     private String options;
     private String correctAnswers;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.EAGER)
     private Survey survey;
 
