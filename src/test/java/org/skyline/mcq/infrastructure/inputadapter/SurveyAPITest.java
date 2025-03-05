@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.hamcrest.core.Is.is;
@@ -54,7 +55,8 @@ class SurveyAPITest {
 
     private static final String SURVEY_PATH = "/api/v1/surveys";
     private static final String SURVEY_PATH_ID = SURVEY_PATH + "/{surveyId}";
-    private static final String SURVEY_QUESTION_PATH_ID = SURVEY_PATH + "/questions/{surveyId}";
+    private static final String SURVEY_QUESTION_PATH_ID = SURVEY_PATH + "/{surveyId}/questions";
+    private static final String SURVEY_ACCOUNT_PATH_ID = SURVEY_PATH + "/{surveyId}/accounts";
 
     @BeforeEach
     void setUp() {
@@ -108,8 +110,8 @@ class SurveyAPITest {
                 .contentType(MediaType.APPLICATION_JSON));
     }
 
-    private ResultActions performPutRequest(String path, Object content, Object... uriVariables) throws Exception {
-        return mockMvc.perform(put(path, uriVariables)
+    private ResultActions performPutRequest(Object content, Object... uriVariables) throws Exception {
+        return mockMvc.perform(put(SurveyAPITest.SURVEY_PATH_ID, uriVariables)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(content)));
@@ -161,7 +163,7 @@ class SurveyAPITest {
     @DisplayName("Get Survey By ID: should return 200 OK")
     void getSurveyById() throws Exception {
 
-        var result = surveyAPI.saveSurvey(surveyRequestDtoTest).getBody().data();
+        var result = Objects.requireNonNull(surveyAPI.saveSurvey(surveyRequestDtoTest).getBody()).data();
         performGetRequest(SURVEY_PATH_ID, result.getId())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title", is(result.getTitle())))
@@ -181,7 +183,7 @@ class SurveyAPITest {
     @DisplayName("Get Survey Questions: should return 200 OK")
     void getSurveyQuestions() throws Exception {
 
-        var result = surveyAPI.saveSurvey(surveyRequestDtoTest).getBody().data();
+        var result = Objects.requireNonNull(surveyAPI.saveSurvey(surveyRequestDtoTest).getBody()).data();
         performGetRequest(SURVEY_QUESTION_PATH_ID, result.getId())
                 .andExpect(status().isOk());
     }
@@ -198,8 +200,8 @@ class SurveyAPITest {
     @DisplayName("Update Survey: should return 204 No Content")
     void updateSurvey() throws Exception {
 
-        var result = surveyAPI.saveSurvey(surveyRequestDtoTest).getBody().data();
-        performPutRequest(SURVEY_PATH_ID, surveyUpdateRequestDtoTest, result.getId())
+        var result = Objects.requireNonNull(surveyAPI.saveSurvey(surveyRequestDtoTest).getBody()).data();
+        performPutRequest(surveyUpdateRequestDtoTest, result.getId())
                 .andExpect(status().isNoContent());
     }
 
@@ -207,7 +209,7 @@ class SurveyAPITest {
     @DisplayName("Update Survey: should return 404 Not Found when survey ID is invalid")
     void updateSurveyNotFound() throws Exception {
 
-        performPutRequest(SURVEY_PATH_ID, surveyUpdateRequestDtoTest, UUID.randomUUID())
+        performPutRequest(surveyUpdateRequestDtoTest, UUID.randomUUID())
                 .andExpect(status().isNotFound());
     }
 
@@ -215,7 +217,7 @@ class SurveyAPITest {
     @DisplayName("Delete Survey: should return 204 No Content")
     void deleteSurvey() throws Exception {
 
-        var result = surveyAPI.saveSurvey(surveyRequestDtoTest).getBody().data();
+        var result = Objects.requireNonNull(surveyAPI.saveSurvey(surveyRequestDtoTest).getBody()).data();
         performDeleteRequest(result.getId())
                 .andExpect(status().isNoContent());
     }
@@ -230,10 +232,10 @@ class SurveyAPITest {
 
     @Test
     @DisplayName("Get accounts: should return all accounts related to a survey")
-    void getAccounts() throws Exception {
+    void getAccountsBySurveyId() throws Exception {
 
-        var result = surveyAPI.saveSurvey(surveyRequestDtoTest).getBody().data();
-        performGetRequest(SURVEY_PATH + "/{surveyId}/accounts", result.getId())
+        var result = Objects.requireNonNull(surveyAPI.saveSurvey(surveyRequestDtoTest).getBody()).data();
+        performGetRequest(SURVEY_ACCOUNT_PATH_ID, result.getId())
                 .andExpect(status().isOk());
     }
 }

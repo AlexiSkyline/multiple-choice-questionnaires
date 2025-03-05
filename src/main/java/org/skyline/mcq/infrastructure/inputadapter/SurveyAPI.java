@@ -71,7 +71,7 @@ public class SurveyAPI {
         ));
     }
 
-    @GetMapping(SURVEY_PATH + "/questions/{surveyId}")
+    @GetMapping(SURVEY_PATH + "/{surveyId}/questions")
     public ResponseEntity<ResponseBody<Set<QuestionSummaryDto>>> getSurveyQuestions(@PathVariable UUID surveyId) {
 
         var survey = surveyInputPort.findSurveyById(surveyId).orElseThrow(() -> new NotFoundException(
