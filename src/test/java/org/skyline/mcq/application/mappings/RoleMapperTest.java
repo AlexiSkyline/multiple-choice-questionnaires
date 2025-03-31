@@ -26,7 +26,7 @@ class RoleMapperTest {
 
         roleTest = Role.builder()
                 .id(UUID.randomUUID())
-                .name(TypeRole.ADMIN)
+                .name(TypeRole.ROLE_ADMIN)
                 .description("Admin")
                 .build();
     }
@@ -36,7 +36,7 @@ class RoleMapperTest {
     void roleRequestDtoToRole() {
 
         var roleRequestDto = RoleRequestDto.builder()
-                .name(TypeRole.ADMIN)
+                .name(TypeRole.ROLE_ADMIN)
                 .description("Admin")
                 .build();
 

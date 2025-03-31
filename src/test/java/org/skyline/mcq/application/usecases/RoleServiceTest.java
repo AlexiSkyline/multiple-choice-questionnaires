@@ -47,18 +47,18 @@ class RoleServiceTest {
 
         roleTest = Role.builder()
                 .id(UUID.randomUUID())
-                .name(TypeRole.SURVEY_RESPONDENT)
+                .name(TypeRole.ROLE_SURVEY_RESPONDENT)
                 .description("SURVEY_RESPONDENT")
                 .build();
 
         roleRequestDtoTest = RoleRequestDto.builder()
-                .name(TypeRole.SURVEY_RESPONDENT)
+                .name(TypeRole.ROLE_SURVEY_RESPONDENT)
                 .description("SURVEY_RESPONDENT")
                 .build();
 
         roleResponseDtoTest = RoleResponseDto.builder()
                 .id(UUID.randomUUID())
-                .name(TypeRole.SURVEY_RESPONDENT)
+                .name(TypeRole.ROLE_SURVEY_RESPONDENT)
                 .description("SURVEY_RESPONDENT")
                 .build();
     }
@@ -67,7 +67,7 @@ class RoleServiceTest {
     @DisplayName("Save Role: Should save a new role and return it")
     void testSaveRole() {
 
-        given(roleRepository.findByName(TypeRole.SURVEY_RESPONDENT)).willReturn(Optional.empty());
+        given(roleRepository.findByName(TypeRole.ROLE_SURVEY_RESPONDENT)).willReturn(Optional.empty());
         given(roleRepository.save(roleTest)).willReturn(roleTest);
         given(roleMapper.roleRequestDtoToRole(roleRequestDtoTest)).willReturn(roleTest);
         given(roleMapper.roleToRoleResponseDto(roleTest)).willReturn(roleResponseDtoTest);
@@ -79,7 +79,7 @@ class RoleServiceTest {
             assertEquals(roleResponseDtoTest, result.get());
         });
 
-        verify(roleRepository, times(1)).findByName(TypeRole.SURVEY_RESPONDENT);
+        verify(roleRepository, times(1)).findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
         verify(roleRepository, times(1)).save(roleTest);
         verify(roleMapper, times(1)).roleRequestDtoToRole(roleRequestDtoTest);
         verify(roleMapper, times(1)).roleToRoleResponseDto(roleTest);
@@ -89,7 +89,7 @@ class RoleServiceTest {
     @DisplayName("Save Role: Should return empty when role already exists")
     void testSaveRoleError() {
 
-        given(roleRepository.findByName(TypeRole.SURVEY_RESPONDENT)).willReturn(Optional.of(roleTest));
+        given(roleRepository.findByName(TypeRole.ROLE_SURVEY_RESPONDENT)).willReturn(Optional.of(roleTest));
 
         Optional<RoleResponseDto> result = roleService.saveRole(roleRequestDtoTest);
 
@@ -97,7 +97,7 @@ class RoleServiceTest {
             assertFalse(result.isPresent());
         });
 
-        verify(roleRepository, times(1)).findByName(TypeRole.SURVEY_RESPONDENT);
+        verify(roleRepository, times(1)).findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
         verify(roleRepository, times(0)).save(roleTest);
         verify(roleMapper, times(0)).roleToRoleResponseDto(roleTest);
     }
@@ -106,17 +106,17 @@ class RoleServiceTest {
     @DisplayName("Find Role by Name: Should return role when it exists")
     void testFindByName() {
 
-        given(roleRepository.findByName(TypeRole.SURVEY_RESPONDENT)).willReturn(Optional.of(roleTest));
+        given(roleRepository.findByName(TypeRole.ROLE_SURVEY_RESPONDENT)).willReturn(Optional.of(roleTest));
         given(roleMapper.roleToRoleResponseDto(roleTest)).willReturn(roleResponseDtoTest);
 
-        Optional<RoleResponseDto> result = roleService.findByName(TypeRole.SURVEY_RESPONDENT);
+        Optional<RoleResponseDto> result = roleService.findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
 
         assertAll(() -> {
             assertTrue(result.isPresent());
             assertEquals(roleResponseDtoTest, result.get());
         });
 
-        verify(roleRepository, times(1)).findByName(TypeRole.SURVEY_RESPONDENT);
+        verify(roleRepository, times(1)).findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
         verify(roleMapper, times(1)).roleToRoleResponseDto(roleTest);
     }
 
@@ -124,15 +124,15 @@ class RoleServiceTest {
     @DisplayName("Find Role by Name: Should return empty when role does not exist")
     void testFindByNameNotFound() {
 
-        given(roleRepository.findByName(TypeRole.SURVEY_RESPONDENT)).willReturn(Optional.empty());
+        given(roleRepository.findByName(TypeRole.ROLE_SURVEY_RESPONDENT)).willReturn(Optional.empty());
 
-        Optional<RoleResponseDto> result = roleService.findByName(TypeRole.SURVEY_RESPONDENT);
+        Optional<RoleResponseDto> result = roleService.findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
 
         assertAll(() -> {
             assertFalse(result.isPresent());
         });
 
-        verify(roleRepository, times(1)).findByName(TypeRole.SURVEY_RESPONDENT);
+        verify(roleRepository, times(1)).findByName(TypeRole.ROLE_SURVEY_RESPONDENT);
         verify(roleMapper, times(0)).roleToRoleResponseDto(roleTest);
     }
 }

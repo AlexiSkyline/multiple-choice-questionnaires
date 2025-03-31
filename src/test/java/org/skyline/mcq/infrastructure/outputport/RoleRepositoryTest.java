@@ -27,7 +27,7 @@ class RoleRepositoryTest {
     @BeforeEach
     void setUp() {
         newRole = Role.builder()
-                .name(TypeRole.ADMIN)
+                .name(TypeRole.ROLE_ADMIN)
                 .description("New Role")
                 .build();
     }
@@ -46,7 +46,7 @@ class RoleRepositoryTest {
 
         assertAll(() -> {
             assertNotNull(savedRole.getId());
-            assertEquals(TypeRole.ADMIN, savedRole.getName());
+            assertEquals(TypeRole.ROLE_ADMIN, savedRole.getName());
             assertEquals("New Role", savedRole.getDescription());
         });
     }
@@ -70,13 +70,13 @@ class RoleRepositoryTest {
 
         var foundRole = roleRepository.findAll().getLast();
 
-        foundRole.setName(TypeRole.SURVEY_CREATOR);
+        foundRole.setName(TypeRole.ROLE_SURVEY_CREATOR);
 
         var updatedRole = roleRepository.saveAndFlush(foundRole);
 
         assertAll(() -> {
             assertNotNull(updatedRole.getId());
-            assertEquals(TypeRole.SURVEY_CREATOR, updatedRole.getName());
+            assertEquals(TypeRole.ROLE_SURVEY_CREATOR, updatedRole.getName());
             assertEquals(foundRole.getDescription(), updatedRole.getDescription());
         });
     }
@@ -85,11 +85,11 @@ class RoleRepositoryTest {
     @DisplayName("Find Role by Name: Should return a role when it exists")
     void testFindRoleByName() {
 
-        var foundRole = roleRepository.findByName(TypeRole.ADMIN);
+        var foundRole = roleRepository.findByName(TypeRole.ROLE_ADMIN);
 
         assertAll(() -> {
             assertTrue(foundRole.isPresent());
-            assertEquals(TypeRole.ADMIN, foundRole.get().getName());
+            assertEquals(TypeRole.ROLE_ADMIN, foundRole.get().getName());
             assertEquals("Administrator", foundRole.get().getDescription());
         });
     }
@@ -101,7 +101,7 @@ class RoleRepositoryTest {
     void testFindRoleByNameNotFound() {
 
         roleRepository.deleteAll();
-        var foundRole = roleRepository.findByName(TypeRole.SURVEY_CREATOR);
+        var foundRole = roleRepository.findByName(TypeRole.ROLE_SURVEY_CREATOR);
 
         assertTrue(foundRole.isEmpty());
     }

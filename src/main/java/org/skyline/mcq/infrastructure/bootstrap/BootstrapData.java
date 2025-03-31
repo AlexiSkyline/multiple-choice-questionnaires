@@ -35,17 +35,17 @@ public class BootstrapData implements CommandLineRunner {
 
         if (roleRepository.count() == 0) {
             var admin = Role.builder()
-                    .name(TypeRole.ADMIN)
+                    .name(TypeRole.ROLE_ADMIN)
                     .description("Administrator")
                     .build();
 
             var surveyCreator = Role.builder()
-                    .name(TypeRole.SURVEY_CREATOR)
+                    .name(TypeRole.ROLE_SURVEY_CREATOR)
                     .description("Survey Creator")
                     .build();
 
             var surveyRespondent = Role.builder()
-                    .name(TypeRole.SURVEY_RESPONDENT)
+                    .name(TypeRole.ROLE_SURVEY_RESPONDENT)
                     .description("Survey Respondent")
                     .build();
 

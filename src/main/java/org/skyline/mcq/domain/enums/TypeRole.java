@@ -2,7 +2,7 @@ package org.skyline.mcq.domain.enums;
 
 public enum TypeRole {
 
-    ADMIN,
-    SURVEY_CREATOR,
-    SURVEY_RESPONDENT
+    ROLE_ADMIN,
+    ROLE_SURVEY_CREATOR,
+    ROLE_SURVEY_RESPONDENT
 }

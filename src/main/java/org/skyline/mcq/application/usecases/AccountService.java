@@ -2,11 +2,13 @@ package org.skyline.mcq.application.usecases;
 
 import lombok.RequiredArgsConstructor;
 import org.skyline.mcq.application.dtos.input.AccountProfileUpdateDto;
+import org.skyline.mcq.application.dtos.input.RegisterUserData;
 import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
 import org.skyline.mcq.application.mappings.AccountMapper;
 import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.infrastructure.inputport.AccountInputPort;
 import org.skyline.mcq.infrastructure.outputport.AccountRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,18 +21,26 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AccountService implements AccountInputPort {
 
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
     private final AccountMapper accountMapper;
 
     @Override
     @Transactional
-    public Optional<AccountSummaryDto> saveAccount(Account account) {
+    public Optional<AccountSummaryDto> saveAccount(RegisterUserData registerUserData) {
 
-        Optional<Account> userFoundByUsername = accountRepository.findByUsername(account.getUsername());
-        Optional<Account> accountFoundByEmail = accountRepository.findByEmail((account.getEmail()));
+        Optional<Account> userFoundByUsername = accountRepository.findByUsername(registerUserData.getUsername());
+        Optional<Account> accountFoundByEmail = accountRepository.findByEmail((registerUserData.getEmail()));
 
         if (userFoundByUsername.isPresent() || accountFoundByEmail.isPresent()) return Optional.empty();
 
-        return Optional.of(accountMapper.accountToAccountResponseDto(accountRepository.save(account)));
+        registerUserData.setPassword(this.passwordEncoder.encode(registerUserData.getPassword()));
+        Account newAccount = this.accountMapper.registerUserDataToAccount(registerUserData);
+
+        return Optional.of(
+            accountMapper.accountToAccountResponseDto(
+                accountRepository.save(newAccount)
+            )
+        );
     }
 
     @Override

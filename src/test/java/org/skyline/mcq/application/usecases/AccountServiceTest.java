@@ -8,11 +8,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyline.mcq.application.dtos.input.AccountProfileUpdateDto;
+import org.skyline.mcq.application.dtos.input.RegisterUserData;
 import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
+import org.skyline.mcq.application.dtos.output.RoleResponseDto;
 import org.skyline.mcq.application.mappings.AccountMapper;
+import org.skyline.mcq.domain.enums.TypeRole;
 import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.infrastructure.outputport.AccountRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,12 +33,16 @@ class AccountServiceTest {
     private AccountRepository accountRepository;
 
     @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
     private AccountMapper accountMapper;
 
     @InjectMocks
     private AccountService accountService;
 
     private Account accountTest;
+    private RegisterUserData registerUserData;
     private AccountSummaryDto accountSummaryDtoTest;
     private AccountProfileUpdateDto accountProfileUpdateDtoTest;
 
@@ -49,6 +58,21 @@ class AccountServiceTest {
                 .password("SkyPassword123")
                 .profileImage("account1.jpg")
                 .description("New Sky responder")
+                .build();
+
+        registerUserData = RegisterUserData.builder()
+                .firstName("Sky")
+                .lastName("Taylor")
+                .username("sky_responder")
+                .email("sky.taylor@example.com")
+                .password("SkyPassword123")
+                .roles(
+                    Collections.singleton(
+                        RoleResponseDto.builder()
+                                .id(UUID.randomUUID())
+                                .name(TypeRole.ROLE_SURVEY_CREATOR).build()
+                    )
+                )
                 .build();
 
         accountSummaryDtoTest = AccountSummaryDto.builder()
@@ -70,12 +94,14 @@ class AccountServiceTest {
     @DisplayName("Save Account: Should save an account and return the response DTO when the account does not exist")
     void testSaveAccount() {
 
+        given(passwordEncoder.encode(registerUserData.getPassword())).willReturn(registerUserData.getPassword());
         given(accountRepository.findByUsername(accountTest.getUsername())).willReturn(Optional.empty());
         given(accountRepository.findByEmail(accountTest.getEmail())).willReturn(Optional.empty());
         given(accountRepository.save(accountTest)).willReturn(accountTest);
+        given(accountMapper.registerUserDataToAccount(registerUserData)).willReturn(accountTest);
         given(accountMapper.accountToAccountResponseDto(accountTest)).willReturn(accountSummaryDtoTest);
 
-        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(accountTest);
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(registerUserData);
 
         assertAll(() -> {
             assertNotNull(accountSummaryDto);
@@ -86,7 +112,9 @@ class AccountServiceTest {
         verify(accountRepository).findByUsername(accountTest.getUsername());
         verify(accountRepository).findByEmail(accountTest.getEmail());
         verify(accountRepository).save(accountTest);
+        verify(accountMapper).registerUserDataToAccount(registerUserData);
         verify(accountMapper).accountToAccountResponseDto(accountTest);
+        verify(passwordEncoder).encode(registerUserData.getPassword());
     }
 
     @Test
@@ -96,7 +124,7 @@ class AccountServiceTest {
         given(accountRepository.findByUsername(accountTest.getUsername())).willReturn(Optional.of(accountTest));
         given(accountRepository.findByEmail(accountTest.getEmail())).willReturn(Optional.empty());
 
-        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(accountTest);
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(registerUserData);
 
         assertAll(() -> {
             assertNotNull(accountSummaryDto);
@@ -116,7 +144,7 @@ class AccountServiceTest {
         given(accountRepository.findByUsername(accountTest.getUsername())).willReturn(Optional.empty());
         given(accountRepository.findByEmail(accountTest.getEmail())).willReturn(Optional.of(accountTest));
 
-        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(accountTest);
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(registerUserData);
 
         assertAll(() -> {
             assertNotNull(accountSummaryDto);
@@ -136,7 +164,7 @@ class AccountServiceTest {
         given(accountRepository.findByUsername(accountTest.getUsername())).willReturn(Optional.of(accountTest));
         given(accountRepository.findByEmail(accountTest.getEmail())).willReturn(Optional.of(accountTest));
 
-        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(accountTest);
+        Optional<AccountSummaryDto> accountSummaryDto = accountService.saveAccount(registerUserData);
 
         assertAll(() -> {
             assertNotNull(accountSummaryDto);
