@@ -7,6 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyline.mcq.application.dtos.input.RefreshTokenData;
+import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
+import org.skyline.mcq.application.mappings.RefreshTokenMapper;
 import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.RefreshToken;
 import org.skyline.mcq.infrastructure.outputport.RefreshTokenRepository;
@@ -28,15 +31,20 @@ class RefreshTokenServiceTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
+    @Mock
+    private RefreshTokenMapper refreshTokenMapper;
+
     @InjectMocks
     private RefreshTokenService refreshTokenService;
 
+    private RefreshTokenData refreshTokenDataTest;
     private RefreshToken refreshTokenTest;
     private RefreshToken expiredRefreshTokenTest;
     private Account accountTest;
 
     @BeforeEach
     void setUp() {
+
         accountTest = Account.builder()
                 .id(UUID.randomUUID())
                 .firstName("Ethan")
@@ -48,11 +56,26 @@ class RefreshTokenServiceTest {
                 .description("Poll Maker")
                 .build();
 
+        AccountSummaryDto accountSummaryDtoTest = AccountSummaryDto.builder()
+                .id(accountTest.getId())
+                .firstName(accountTest.getFirstName())
+                .lastName(accountTest.getLastName())
+                .username(accountTest.getUsername())
+                .email(accountTest.getEmail())
+                .build();
+
         refreshTokenTest = RefreshToken.builder()
                 .id(UUID.randomUUID())
                 .token("valid-token-123")
                 .expiryDate(Instant.now().plus(Duration.ofDays(30)))
                 .account(accountTest)
+                .build();
+
+
+        refreshTokenDataTest = RefreshTokenData.builder()
+                .token("expired-token-456")
+                .expiryDate(Instant.now().minus(Duration.ofDays(1)))
+                .accountSummaryDto(accountSummaryDtoTest)
                 .build();
 
         expiredRefreshTokenTest = RefreshToken.builder()
@@ -67,16 +90,47 @@ class RefreshTokenServiceTest {
     @DisplayName("Should successfully create a refresh token")
     void testCreateRefreshToken() {
 
+        given(refreshTokenMapper.refreshTokenDataToRefreshToken(refreshTokenDataTest)).willReturn(refreshTokenTest);
         given(refreshTokenRepository.save(refreshTokenTest)).willReturn(refreshTokenTest);
 
-        var result = refreshTokenService.createRefreshToken(refreshTokenTest);
+        Optional<String> result = refreshTokenService.createRefreshToken(refreshTokenDataTest);
 
         assertAll("Verify created refresh token",
                 () -> assertNotNull(result, "Result should not be null"),
-                () -> assertEquals(refreshTokenTest.getId(), result.getId(), "IDs should match")
+                () -> assertTrue(result.isPresent(), "Result should be present")
         );
 
+        verify(refreshTokenMapper).refreshTokenDataToRefreshToken(refreshTokenDataTest);
         verify(refreshTokenRepository).save(refreshTokenTest);
+    }
+
+    @Test
+    @DisplayName("Should find refresh token by AccountId when token exist")
+    void testFindByAccountId() {
+
+        given(refreshTokenRepository.findByAccountId(accountTest.getId())).willReturn(Optional.of(refreshTokenTest));
+
+        String token = refreshTokenService.findByAccountId(accountTest.getId()).orElseThrow();
+
+        assertAll("Verify found refresh token",
+                () -> assertNotNull(token),
+                () -> assertEquals(token, refreshTokenTest.getToken())
+        );
+
+        verify(refreshTokenRepository).findByAccountId(accountTest.getId());
+    }
+
+    @Test
+    @DisplayName("Should return empty when token doesn't exist when find refresh token by AccountId")
+    void testFindByAccountIdNotExist() {
+
+        given(refreshTokenRepository.findByAccountId(accountTest.getId())).willReturn(Optional.empty());
+
+        Optional<String> token = refreshTokenService.findByAccountId(accountTest.getId());
+
+        assertTrue(token.isEmpty(), "Token should not be empty");
+
+        verify(refreshTokenRepository).findByAccountId(accountTest.getId());
     }
 
     @Test
