@@ -3,16 +3,16 @@ package org.skyline.mcq.infrastructure.http.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
 
 @Getter @Setter
 @AllArgsConstructor
-public class ErrorResponse {
+public class ErrorResponse<T> {
 
-    private String timestamp;
+    private LocalDateTime timestamp;
     private int status;
-    private HttpStatus httpStatus;
     private String error;
-    private String message;
+    private T message;
     private String path;
 }
