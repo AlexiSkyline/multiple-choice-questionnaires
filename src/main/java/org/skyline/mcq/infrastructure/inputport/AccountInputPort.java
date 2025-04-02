@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface AccountInputPort {
 
-    Optional<AccountSummaryDto> saveAccount(RegisterUserData RegisterUserData);
+    Optional<AccountSummaryDto> saveAccount(RegisterUserData registerUserData);
     Optional<AccountSummaryDto> getAccountById(UUID id);
     Optional<AccountSummaryDto> getUserByEmail(String email);
     Optional<AccountSummaryDto> updateAccount(UUID id, AccountProfileUpdateDto account);
