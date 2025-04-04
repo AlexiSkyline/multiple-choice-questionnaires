@@ -48,7 +48,6 @@ class CategoryMapperTest {
                 .title("New Category")
                 .description("New Category")
                 .image("New_Category.png")
-                .accountId(accountTest.getId())
                 .build();
     }
 
@@ -88,7 +87,6 @@ class CategoryMapperTest {
                 .title("Update Category")
                 .description("Update Category")
                 .image("Update_Category.png")
-                .accountId(UUID.randomUUID())
                 .build();
 
         categoryMapper.updateCategoryFromCategoryRequestDto(categoryRequestDto, categoryTest);

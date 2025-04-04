@@ -2,14 +2,12 @@ package org.skyline.mcq.application.dtos.input;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.UUID;
+import lombok.*;
 
 @Builder
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class CategoryRequestDto {
 
     @NotBlank
@@ -23,7 +21,4 @@ public class CategoryRequestDto {
     @NotBlank
     @NotNull
     private String image;
-
-    @NotNull
-    private UUID accountId;
 }

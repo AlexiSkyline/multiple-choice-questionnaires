@@ -32,8 +32,8 @@ public class CategoryService implements CategoryInputPort {
 
     @Override
     @Transactional
-    public Optional<CategoryResponseDto> saveCategory(CategoryRequestDto category) {
-        Optional<Account> account = accountRepository.findById(category.getAccountId()).filter(Account::getActive);
+    public Optional<CategoryResponseDto> saveCategory(UUID accountId, CategoryRequestDto category) {
+        Optional<Account> account = accountRepository.findById(accountId).filter(Account::getActive);
 
         if (account.isEmpty()) return Optional.empty();
 
@@ -68,11 +68,11 @@ public class CategoryService implements CategoryInputPort {
 
     @Override
     @Transactional
-    public Optional<CategoryResponseDto> updateCategory(UUID id, CategoryRequestDto category) {
+    public Optional<CategoryResponseDto> updateCategory(UUID id, UUID accountId, CategoryRequestDto category) {
 
         AtomicReference<Optional<CategoryResponseDto>> atomicReference = new AtomicReference<>();
 
-        categoryRepository.findById(id).ifPresentOrElse(foundCategory -> {
+        categoryRepository.findByIdAndAccountId(id, accountId).ifPresentOrElse(foundCategory -> {
             if (Boolean.TRUE.equals(foundCategory.getActive())) {
                 categoryMapper.updateCategoryFromCategoryRequestDto(category, foundCategory);
                 Category updatedCategory = categoryRepository.save(foundCategory);
@@ -89,9 +89,9 @@ public class CategoryService implements CategoryInputPort {
 
     @Override
     @Transactional
-    public Boolean deleteCategory(UUID id) {
+    public Boolean deleteCategoryByIdAndByAccountId(UUID id, UUID accountId) {
 
-        Optional<Category> category = categoryRepository.findById(id);
+        Optional<Category> category = categoryRepository.findByIdAndAccountId(id, accountId);
 
         if (category.isPresent() && Boolean.TRUE.equals(category.get().getActive())) {
             category.get().setActive(false);

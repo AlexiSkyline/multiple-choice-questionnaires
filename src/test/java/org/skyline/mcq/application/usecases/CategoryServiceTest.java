@@ -86,7 +86,6 @@ class CategoryServiceTest {
                 .title("New Category")
                 .description("New Category")
                 .image("New_Category.png")
-                .accountId(accountTest.getId())
                 .build();
 
         List<Category> categories = List.of(
@@ -121,7 +120,7 @@ class CategoryServiceTest {
         given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
         given(categoryMapper.categoryRequestDtoToCategory(categoryRequestDtoTest)).willReturn(categoryTest);
 
-        Optional<CategoryResponseDto> result = categoryService.saveCategory(categoryRequestDtoTest);
+        Optional<CategoryResponseDto> result = categoryService.saveCategory(accountTest.getId(), categoryRequestDtoTest);
 
         assertAll(() -> {
             assertNotNull(result);
@@ -140,7 +139,7 @@ class CategoryServiceTest {
 
         given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
 
-        Optional<CategoryResponseDto> result = categoryService.saveCategory(categoryRequestDtoTest);
+        Optional<CategoryResponseDto> result = categoryService.saveCategory(accountTest.getId(), categoryRequestDtoTest);
 
         assertAll(() -> {
             assertNotNull(result);
@@ -322,18 +321,18 @@ class CategoryServiceTest {
     @DisplayName("Update Category: Should update category when it exists and is active")
     void testUpdateCategory() {
 
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.of(categoryTest));
         given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
         given(categoryMapper.categoryToCategoryResponseDto(categoryTest)).willReturn(categoryResponseDtoTest);
 
-        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), categoryRequestDtoTest);
+        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), accountTest.getId(), categoryRequestDtoTest);
 
         assertAll(() -> {
             assertTrue(result.isPresent());
             assertEquals(categoryResponseDtoTest, result.get());
         });
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(1)).save(categoryTest);
         verify(categoryMapper, times(1)).categoryToCategoryResponseDto(categoryTest);
     }
@@ -342,13 +341,13 @@ class CategoryServiceTest {
     @DisplayName("Update Category: Should return empty when category is not found")
     void testUpdateCategoryNotFound() {
 
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.empty());
 
-        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), categoryRequestDtoTest);
+        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), accountTest.getId(), categoryRequestDtoTest);
 
         assertTrue(result.isEmpty(), "The result should be empty");
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(0)).save(categoryTest);
         verify(categoryMapper, times(0)).categoryToCategoryResponseDto(categoryTest);
     }
@@ -358,58 +357,58 @@ class CategoryServiceTest {
     void testUpdateCategoryNotActive() {
 
         categoryTest.setActive(false);
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.of(categoryTest));
 
-        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), categoryRequestDtoTest);
+        Optional<CategoryResponseDto> result = categoryService.updateCategory(categoryTest.getId(), accountTest.getId(), categoryRequestDtoTest);
 
         assertTrue(result.isEmpty(), "The result should be empty");
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(0)).save(categoryTest);
         verify(categoryMapper, times(0)).categoryToCategoryResponseDto(categoryTest);
     }
 
     @Test
     @DisplayName("Delete Category: Should delete existing category and return true")
-    void testDeleteCategory() {
+    void testDeleteCategoryByIdAndByAccountId() {
 
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.of(categoryTest));
         given(categoryRepository.save(categoryTest)).willReturn(categoryTest);
 
-        Boolean result = categoryService.deleteCategory(categoryTest.getId());
+        Boolean result = categoryService.deleteCategoryByIdAndByAccountId(categoryTest.getId(), accountTest.getId());
 
         assertTrue(result);
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(1)).save(categoryTest);
     }
 
     @Test
     @DisplayName("Delete Category: Should return false when category not found")
-    void testDeleteCategoryNotFound() {
+    void testDeleteCategoryByIdAndByAccountIdNotFound() {
 
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.empty());
 
-        Boolean result = categoryService.deleteCategory(categoryTest.getId());
+        Boolean result = categoryService.deleteCategoryByIdAndByAccountId(categoryTest.getId(), accountTest.getId());
 
         assertFalse(result);
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(0)).delete(categoryTest);
     }
 
     @Test
     @DisplayName("Delete Category: Should return false when category is inactive")
-    void testDeleteCategoryInactive() {
+    void testDeleteCategoryByIdAndByAccountIdInactive() {
 
         categoryTest.setActive(false);
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
+        given(categoryRepository.findByIdAndAccountId(categoryTest.getId(), accountTest.getId())).willReturn(Optional.of(categoryTest));
 
-        Boolean result = categoryService.deleteCategory(categoryTest.getId());
+        Boolean result = categoryService.deleteCategoryByIdAndByAccountId(categoryTest.getId(), accountTest.getId());
 
         assertFalse(result);
 
-        verify(categoryRepository, times(1)).findById(categoryTest.getId());
+        verify(categoryRepository, times(1)).findByIdAndAccountId(categoryTest.getId(), accountTest.getId());
         verify(categoryRepository, times(0)).delete(categoryTest);
     }
 

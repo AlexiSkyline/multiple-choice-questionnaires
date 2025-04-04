@@ -9,8 +9,8 @@ import java.util.UUID;
 
 public interface CategoryInputPort {
 
-    Optional<CategoryResponseDto> saveCategory(CategoryRequestDto category);
+    Optional<CategoryResponseDto> saveCategory(UUID accountId, CategoryRequestDto category);
     Page<CategoryResponseDto> listCategories(UUID accountId, String title, Boolean isActive, Integer pageNumber, Integer pageSize);
-    Optional<CategoryResponseDto> updateCategory(UUID id, CategoryRequestDto category);
-    Boolean deleteCategory(UUID id);
+    Optional<CategoryResponseDto> updateCategory(UUID id, UUID accountId, CategoryRequestDto category);
+    Boolean deleteCategoryByIdAndByAccountId(UUID id, UUID accountId);
 }

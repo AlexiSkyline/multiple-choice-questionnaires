@@ -7,8 +7,11 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.skyline.mcq.application.dtos.input.RefreshTokenData;
 import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
+import org.skyline.mcq.application.utils.CustomUserDetails;
 import org.skyline.mcq.infrastructure.inputport.JwtInputPort;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -115,5 +118,10 @@ public class JwtTokenProvider implements JwtInputPort {
                 .token(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(refreshTokenExpiration))
                 .build();
+    }
+
+    public CustomUserDetails getCurrentUserDetails() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (CustomUserDetails) authentication.getPrincipal();
     }
 }
