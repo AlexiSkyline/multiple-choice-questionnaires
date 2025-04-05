@@ -39,8 +39,9 @@ public class SurveyService implements SurveyInputPort {
 
     @Override
     @Transactional
-    public Optional<SurveyResponseDto> saveSurvey(SurveyRequestDto survey) {
-        Optional<Account> account = accountRepository.findById(survey.getAccountId()).filter(Account::getActive);
+    public Optional<SurveyResponseDto> saveSurvey(UUID accountId, SurveyRequestDto survey) {
+
+        Optional<Account> account = accountRepository.findById(accountId).filter(Account::getActive);
         Optional<Category> category = categoryRepository.findById(survey.getCategoryId()).filter(Category::getActive);
 
         if (account.isEmpty() || category.isEmpty()) return Optional.empty();
@@ -90,11 +91,11 @@ public class SurveyService implements SurveyInputPort {
 
     @Override
     @Transactional
-    public Optional<SurveyResponseDto> updateSurvey(UUID id, SurveyUpdateRequestDto survey) {
+    public Optional<SurveyResponseDto> updateSurvey(UUID id, UUID accountId, SurveyUpdateRequestDto survey) {
 
         AtomicReference<Optional<SurveyResponseDto>> atomicReference = new AtomicReference<>();
 
-        surveyRepository.findById(id).ifPresentOrElse(surveyFound -> {
+        surveyRepository.findByIdAndAccountId(id, accountId).ifPresentOrElse(surveyFound -> {
             if (Boolean.TRUE.equals(surveyFound.getActive())) {
                 surveyMapper.updateSurveyFromSurveyUpdateRequestDto(survey, surveyFound);
                 SurveyResponseDto surveyResponseDto = surveyMapper.surveyToSurveyResponseDto(surveyRepository.save(surveyFound));
@@ -110,9 +111,9 @@ public class SurveyService implements SurveyInputPort {
 
     @Override
     @Transactional
-    public Boolean deleteSurvey(UUID id) {
+    public Boolean deleteSurvey(UUID id, UUID accountId) {
 
-        Optional<Survey> survey = surveyRepository.findById(id);
+        Optional<Survey> survey = surveyRepository.findByIdAndAccountId(id, accountId);
 
         if (survey.isPresent() && Boolean.FALSE.equals(!survey.get().getActive())) {
             survey.get().setActive(false);

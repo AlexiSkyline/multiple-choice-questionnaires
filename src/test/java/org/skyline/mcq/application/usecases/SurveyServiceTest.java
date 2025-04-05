@@ -122,7 +122,6 @@ class SurveyServiceTest {
                 .timeLimit(3600)
                 .attempts(1)
                 .hasRestrictedAccess(true)
-                .accountId(accountTest.getId())
                 .categoryId(categoryTest.getId())
                 .build();
 
@@ -160,7 +159,7 @@ class SurveyServiceTest {
         given(surveyMapper.surveyToSurveyResponseDto(surveyTest)).willReturn(surveyResponseDtoTest);
         given(surveyMapper.surveyRequesttDtoToSurvey(surveyRequestDtoTest)).willReturn(surveyTest);
 
-        var result = surveyService.saveSurvey(surveyRequestDtoTest);
+        var result = surveyService.saveSurvey(accountTest.getId(), surveyRequestDtoTest);
 
         assertAll("Save Survey",
                 () -> assertNotNull(result, "The result should not be null"),
@@ -180,9 +179,8 @@ class SurveyServiceTest {
 
         given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
         given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.of(categoryTest));
-        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
 
-        var result = surveyService.saveSurvey(surveyRequestDtoTest);
+        var result = surveyService.saveSurvey(accountTest.getId(), surveyRequestDtoTest);
 
         assertAll("Save Survey - Account Not Found",
                 () -> assertNotNull(result, "The result should not be null"),
@@ -201,9 +199,8 @@ class SurveyServiceTest {
 
         given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
         given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
-        given(categoryRepository.findById(categoryTest.getId())).willReturn(Optional.empty());
 
-        var result = surveyService.saveSurvey(surveyRequestDtoTest);
+        var result = surveyService.saveSurvey(accountTest.getId(), surveyRequestDtoTest);
 
         assertAll("Save Survey - Category Not Found",
                 () -> assertNotNull(result, "The result should not be null"),
@@ -354,15 +351,15 @@ class SurveyServiceTest {
     @Test
     @DisplayName("Update Survey: Should update survey when it exists and is active")
     void testUpdateSurvey() {
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.of(surveyTest));
         given(surveyRepository.save(surveyTest)).willReturn(surveyTest);
         given(surveyMapper.surveyToSurveyResponseDto(surveyTest)).willReturn(surveyResponseDtoTest);
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), accountTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isPresent(), "Survey should be updated successfully");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository).save(surveyTest);
         verify(surveyMapper).surveyToSurveyResponseDto(surveyTest);
     }
@@ -370,13 +367,13 @@ class SurveyServiceTest {
     @Test
     @DisplayName("Update Survey: Should not update survey when it is not found")
     void testUpdateSurveyNotFound() {
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.empty());
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.empty());
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), accountTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isEmpty(), "Survey should not be updated if not found");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository, never()).save(surveyTest);
         verify(surveyMapper, never()).surveyToSurveyResponseDto(surveyTest);
     }
@@ -385,13 +382,13 @@ class SurveyServiceTest {
     @DisplayName("Update Survey: Should not update survey when it is inactive")
     void testUpdateSurveyInactive() {
         surveyTest.setActive(false);
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.of(surveyTest));
 
-        var result = surveyService.updateSurvey(surveyTest.getId(), surveyUpdateRequestDtoTest);
+        var result = surveyService.updateSurvey(surveyTest.getId(), accountTest.getId(), surveyUpdateRequestDtoTest);
 
         assertTrue(result.isEmpty(), "Survey should not be updated if it is inactive");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository, never()).save(surveyTest);
         verify(surveyMapper, never()).surveyToSurveyResponseDto(surveyTest);
     }
@@ -399,27 +396,27 @@ class SurveyServiceTest {
     @Test
     @DisplayName("Delete Survey: Should delete survey when it exists")
     void shouldDeleteSurveyWhenExists() {
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.of(surveyTest));
         given(surveyRepository.save(surveyTest)).willReturn(surveyTest);
 
-        boolean result = surveyService.deleteSurvey(surveyTest.getId());
+        boolean result = surveyService.deleteSurvey(surveyTest.getId(), accountTest.getId());
 
         assertTrue(result, "Survey should be deleted successfully");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository).save(surveyTest);
     }
 
     @Test
     @DisplayName("Delete Survey: Should not delete survey when it is not found")
     void shouldNotDeleteSurveyWhenNotFound() {
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.empty());
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.empty());
 
-        boolean result = surveyService.deleteSurvey(surveyTest.getId());
+        boolean result = surveyService.deleteSurvey(surveyTest.getId(), accountTest.getId());
 
         assertFalse(result, "Survey should not be deleted if not found");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository, never()).save(any());
     }
 
@@ -427,13 +424,13 @@ class SurveyServiceTest {
     @DisplayName("Delete Survey: Should not delete survey when it is already inactive")
     void shouldNotDeleteSurveyWhenAlreadyInactive() {
         surveyTest.setActive(false);
-        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.of(surveyTest));
 
-        boolean result = surveyService.deleteSurvey(surveyTest.getId());
+        boolean result = surveyService.deleteSurvey(surveyTest.getId(), accountTest.getId());
 
         assertFalse(result, "Survey should not be deleted if already inactive");
 
-        verify(surveyRepository).findById(surveyTest.getId());
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository, never()).save(any());
     }
 }

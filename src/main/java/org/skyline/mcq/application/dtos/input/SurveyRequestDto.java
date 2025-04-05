@@ -35,9 +35,6 @@ public class SurveyRequestDto {
     private Integer timeLimit;
 
     @NotNull
-    private UUID accountId;
-
-    @NotNull
     private Integer attempts;
 
     @NotNull
