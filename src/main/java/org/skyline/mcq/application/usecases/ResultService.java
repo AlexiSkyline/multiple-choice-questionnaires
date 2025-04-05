@@ -30,8 +30,8 @@ public class ResultService implements ResultInputPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ResultResponseDto> findResultById(UUID id) {
-        return resultRepository.findById(id)
+    public Optional<ResultResponseDto> findResultById(UUID id, UUID accountId) {
+        return resultRepository.findByIdAndAccountId(id, accountId)
                 .map(resultMapper::resultToResultResponseDto);
     }
 

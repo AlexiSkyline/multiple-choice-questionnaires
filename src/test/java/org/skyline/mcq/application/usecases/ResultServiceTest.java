@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyline.mcq.application.dtos.output.ResultResponseDto;
 import org.skyline.mcq.application.mappings.ResultMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
+import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Result;
 import org.skyline.mcq.infrastructure.outputport.ResultRepository;
 import org.springframework.data.domain.Page;
@@ -45,9 +46,21 @@ class ResultServiceTest {
     ResultResponseDto resultResponseDtoTest;
     private Page<Result> resultPage;
     private PageRequest pageable;
+    private Account accountTest;
 
     @BeforeEach
     void setUp() {
+
+        accountTest = Account.builder()
+                .id(UUID.randomUUID())
+                .firstName("Ethan")
+                .lastName("Miller")
+                .username("ethan_creator")
+                .email("ethan.miller@example.com")
+                .password("EthanPassword123")
+                .profileImage("creator2.jpg")
+                .description("Poll Maker")
+                .build();
 
         resultTest = Result.builder()
                 .id(UUID.randomUUID())
@@ -56,6 +69,7 @@ class ResultServiceTest {
                 .totalPoints(100)
                 .correctAnswers(10)
                 .incorrectAnswers(0)
+                .account(accountTest)
                 .build();
 
         resultResponseDtoTest = ResultResponseDto.builder()
@@ -93,17 +107,17 @@ class ResultServiceTest {
     @DisplayName("Find Result by ID: Should return a result for a given ID")
     void testFindResultById() {
 
-        given(resultRepository.findById(resultTest.getId())).willReturn(java.util.Optional.of(resultTest));
+        given(resultRepository.findByIdAndAccountId(resultTest.getId(), accountTest.getId())).willReturn(java.util.Optional.of(resultTest));
         given(resultMapper.resultToResultResponseDto(resultTest)).willReturn(resultResponseDtoTest);
 
-        var resultResponseDto = resultService.findResultById(resultTest.getId());
+        var resultResponseDto = resultService.findResultById(resultTest.getId(), accountTest.getId());
 
         assertAll(() -> {
             assertNotNull(resultResponseDto);
             assertEquals(resultResponseDtoTest, resultResponseDto.get());
         });
 
-        verify(resultRepository).findById(resultTest.getId());
+        verify(resultRepository).findByIdAndAccountId(resultTest.getId(), accountTest.getId());
         verify(resultMapper).resultToResultResponseDto(resultTest);
     }
 
@@ -111,16 +125,16 @@ class ResultServiceTest {
     @DisplayName("Find Result by ID: Should return an empty optional when result is not found")
     void testFindResultByIdNotFound() {
 
-        given(resultRepository.findById(resultTest.getId())).willReturn(java.util.Optional.empty());
+        given(resultRepository.findByIdAndAccountId(resultTest.getId(), accountTest.getId())).willReturn(java.util.Optional.empty());
 
-        var resultResponseDto = resultService.findResultById(resultTest.getId());
+        var resultResponseDto = resultService.findResultById(resultTest.getId(), accountTest.getId());
 
         assertAll(() -> {
             assertNotNull(resultResponseDto);
             assertTrue(resultResponseDto.isEmpty());
         });
 
-        verify(resultRepository).findById(resultTest.getId());
+        verify(resultRepository).findByIdAndAccountId(resultTest.getId(), accountTest.getId());
         verify(resultMapper, never()).resultToResultResponseDto(resultTest);
     }
 
