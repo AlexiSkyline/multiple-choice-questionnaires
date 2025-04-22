@@ -4,9 +4,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Question;
+import org.skyline.mcq.domain.models.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.UUID;
@@ -18,12 +21,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class QuestionRepositoryTest {
 
     @Autowired
+    SurveyRepository surveyRepository;
+
+    @Autowired
     QuestionRepository questionRepository;
 
     Question questionTest;
+    Survey surveyTest;
+    Account accountTest;
 
     @BeforeEach
     void setUp() {
+        surveyTest = surveyRepository.findAll().getFirst();
+        accountTest = surveyTest.getAccount();
 
         questionTest = Question.builder()
                 .content("Example new Question")
@@ -32,6 +42,7 @@ class QuestionRepositoryTest {
                 .allowedAnswers(2)
                 .options("{a, b, c, d, e}")
                 .correctAnswers("{b, d}")
+                .survey(surveyTest)
                 .build();
     }
 
@@ -52,8 +63,8 @@ class QuestionRepositoryTest {
         );
     }
 
-
     @Test
+    @Rollback
     @DisplayName("Test finding a question by ID")
     void testFindById() {
         var savedQuestion = questionRepository.save(questionTest);
@@ -66,11 +77,35 @@ class QuestionRepositoryTest {
         );
     }
 
-
     @Test
     @DisplayName("Test finding a question by ID when it does not exist")
     void testFindByIdNotFound() {
         var questionFound = questionRepository.findById(UUID.randomUUID());
+
+        assertTrue(questionFound.isEmpty());
+    }
+
+    @Test
+    @Rollback
+    @DisplayName("Test finding a question by ID and AccountId")
+    void testFindByIdAndAccountId() {
+        var savedQuestion = questionRepository.save(questionTest);
+
+        var questionFound = questionRepository.findByIdAndSurveyAccountId(savedQuestion.getId(), accountTest.getId());
+
+        assertAll(
+                () -> assertTrue(questionFound.isPresent()),
+                () -> assertFalse(questionFound.isEmpty())
+        );
+    }
+
+    @Test
+    @Rollback
+    @DisplayName("Test finding a question by ID and AccountId")
+    void testFindByIdAndAccountIdNotFound() {
+        var savedQuestion = questionRepository.save(questionTest);
+
+        var questionFound = questionRepository.findByIdAndSurveyAccountId(savedQuestion.getId(), UUID.randomUUID());
 
         assertTrue(questionFound.isEmpty());
     }

@@ -11,7 +11,7 @@ public interface QuestionInputPort {
 
     Optional<QuestionResponseDto> saveQuestion(QuestionRequestDto question);
     Optional<QuestionResponseDto> findQuestionById(UUID id);
+    Optional<QuestionResponseDto> findQuestionByIdAndAccountId(UUID id, UUID accountId);
     Optional<QuestionResponseDto> updateQuestion(UUID uuid, QuestionUpdateRequestDto question);
-    Boolean deleteQuestion(UUID id);
+    Boolean deleteQuestion(UUID id, UUID accountId);
 }
-

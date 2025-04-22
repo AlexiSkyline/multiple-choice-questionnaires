@@ -11,6 +11,7 @@ import org.skyline.mcq.application.dtos.input.QuestionRequestDto;
 import org.skyline.mcq.application.dtos.input.QuestionUpdateRequestDto;
 import org.skyline.mcq.application.dtos.output.QuestionResponseDto;
 import org.skyline.mcq.application.mappings.QuestionMapper;
+import org.skyline.mcq.domain.models.Account;
 import org.skyline.mcq.domain.models.Question;
 import org.skyline.mcq.domain.models.Survey;
 import org.skyline.mcq.infrastructure.outputport.QuestionRepository;
@@ -40,12 +41,24 @@ class QuestionServiceTest {
 
     private Survey surveyTest;
     private Question questionTest;
+    private Account accountTest;
     private QuestionResponseDto questionResponseDtoTest;
     private QuestionRequestDto questionRequestDtoTest;
     private QuestionUpdateRequestDto questionUpdateRequestDto;
 
     @BeforeEach
     void setUp() {
+
+        accountTest = Account.builder()
+                .id(UUID.randomUUID())
+                .firstName("Sky")
+                .lastName("Taylor")
+                .username("sky_responder")
+                .email("sky.taylor@example.com")
+                .password("SkyPassword123")
+                .profileImage("account1.jpg")
+                .description("New Sky responder")
+                .build();
 
         surveyTest = Survey.builder()
                 .id(UUID.randomUUID())
@@ -54,6 +67,7 @@ class QuestionServiceTest {
                 .image("survey.png")
                 .maxPoints(10)
                 .questionCount(5)
+                .account(accountTest)
                 .active(true)
                 .timeLimit(3600)
                 .attempts(1)
@@ -178,6 +192,43 @@ class QuestionServiceTest {
     }
 
     @Test
+    @DisplayName("Find Question by ID and AccountId: Should return the question when it exists")
+    void testFindQuestionByIdAndAccountId() {
+
+        given(questionRepository.findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId())).willReturn(Optional.of(questionTest));
+        given(questionMapper.questionToQuestionResponseDto(questionTest)).willReturn(questionResponseDtoTest);
+
+        var result = questionService.findQuestionByIdAndAccountId(questionTest.getId(), accountTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertTrue(result.isPresent());
+            assertEquals(questionResponseDtoTest, result.get());
+        });
+
+        verify(questionRepository).findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId());
+        verify(questionMapper).questionToQuestionResponseDto(questionTest);
+    }
+
+    @Test
+    @DisplayName("Find Question by ID and AccountId: Should return empty when the question does not exist")
+    void testFindQuestionByIdAndAccountIdNotFound() {
+
+        given(questionRepository.findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId())).willReturn(Optional.empty());
+
+        var result = questionService.findQuestionByIdAndAccountId(questionTest.getId(), accountTest.getId());
+
+        assertAll(() -> {
+            assertNotNull(result);
+            assertFalse(result.isPresent());
+        });
+
+        verify(questionRepository).findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId());
+        verify(questionMapper, never()).questionToQuestionResponseDto(questionTest);
+    }
+
+
+    @Test
     @DisplayName("Update Question: Should update and return the question when it exists")
     void testUpdateQuestion() {
 
@@ -222,16 +273,16 @@ class QuestionServiceTest {
     @DisplayName("Delete Question: Should delete the question and return true when it exists")
     void testDeleteQuestion() {
 
-        given(questionRepository.findById(questionTest.getId())).willReturn(Optional.of(questionTest));
+        given(questionRepository.findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId())).willReturn(Optional.of(questionTest));
 
-        var result = questionService.deleteQuestion(questionTest.getId());
+        var result = questionService.deleteQuestion(questionTest.getId(), accountTest.getId());
 
         assertAll(() -> {
             assertNotNull(result);
             assertTrue(result);
         });
 
-        verify(questionRepository).findById(questionTest.getId());
+        verify(questionRepository).findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId());
         verify(questionRepository).delete(questionTest);
     }
 
@@ -239,16 +290,16 @@ class QuestionServiceTest {
     @DisplayName("Delete Question: Should return false when the question does not exist")
     void testDeleteQuestionFail() {
 
-        given(questionRepository.findById(questionTest.getId())).willReturn(Optional.empty());
+        given(questionRepository.findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId())).willReturn(Optional.empty());
 
-        var result = questionService.deleteQuestion(questionTest.getId());
+        var result = questionService.deleteQuestion(questionTest.getId(), accountTest.getId());
 
         assertAll(() -> {
             assertNotNull(result);
             assertFalse(result);
         });
 
-        verify(questionRepository).findById(questionTest.getId());
+        verify(questionRepository).findByIdAndSurveyAccountId(questionTest.getId(), accountTest.getId());
         verify(questionRepository, never()).delete(questionTest);
     }
 }

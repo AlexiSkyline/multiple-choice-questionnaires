@@ -1,52 +1,48 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.skyline.mcq.application.dtos.input.QuestionRequestDto;
 import org.skyline.mcq.application.dtos.input.QuestionUpdateRequestDto;
+import org.skyline.mcq.application.dtos.input.SignUpRequestDto;
+import org.skyline.mcq.domain.enums.TypeRole;
+import org.skyline.mcq.domain.models.Account;
+import org.skyline.mcq.domain.models.Category;
 import org.skyline.mcq.domain.models.Survey;
+import org.skyline.mcq.infrastructure.inputport.QuestionInputPort;
 import org.skyline.mcq.infrastructure.outputport.AccountRepository;
 import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
 import org.skyline.mcq.infrastructure.outputport.SurveyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class QuestionAPITest {
 
     @Autowired
-    private SurveyRepository surveyRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private QuestionAPI questionAPI;
+    private QuestionInputPort questionInputPort;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
-    private WebApplicationContext wac;
-
     private MockMvc mockMvc;
 
     private static final String QUESTION_PATH = "/api/v1/questions";
@@ -54,34 +50,51 @@ class QuestionAPITest {
 
     private QuestionRequestDto questionRequestDtoTest;
     private QuestionUpdateRequestDto questionUpdateRequestDtoTest;
-    private Survey surveyTest;
+    private static String tokenCreator;
+    private static UUID surveyId;
+    private static UUID surveyBId;
+
+    @BeforeAll
+    static void initializeTestEnvironment(
+            @Autowired AuthAPI authAPI,
+            @Autowired AccountRepository accountRepository,
+            @Autowired CategoryRepository categoryRepository,
+            @Autowired SurveyRepository surveyRepository
+    ) {
+        var testCreator = buildSignUpRequest();
+
+        tokenCreator = registerUserAndGetToken(authAPI, testCreator);
+
+        var category = categoryRepository.findAll().getFirst();
+
+        var creator = accountRepository.findByEmail(testCreator.getEmail()).orElseThrow();
+        var survey = createTestSurvey(surveyRepository, creator, category, 5);
+        surveyId = survey.getId();
+
+        var surveyB = createTestSurvey(surveyRepository, creator, category, 0);
+        surveyBId = surveyB.getId();
+    }
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
-        surveyTest = createSurvey();
         questionRequestDtoTest = createQuestionRequestDto();
         questionUpdateRequestDtoTest = createQuestionUpdateRequestDto();
     }
 
-    private Survey createSurvey() {
-        var accountTest = accountRepository.findAll().getFirst();
-        var categoryTest = categoryRepository.findAll().getFirst();
-
-        return Survey.builder()
-                .title("new title")
-                .description("new description")
-                .image("survey.png")
+    private static Survey createTestSurvey(SurveyRepository repository, Account account, Category category, int numberQuestion) {
+        return repository.save(Survey.builder()
+                .title("test title")
+                .description("test description")
+                .image("test image")
                 .maxPoints(10)
-                .questionCount(5)
+                .questionCount(numberQuestion)
                 .timeLimit(3600)
                 .attempts(1)
-                .hasRestrictedAccess(false)
-                .active(true)
-                .account(accountTest)
-                .category(categoryTest)
+                .hasRestrictedAccess(true)
+                .category(category)
+                .account(account)
                 .status(true)
-                .build();
+                .build());
     }
 
     private QuestionRequestDto createQuestionRequestDto() {
@@ -106,37 +119,38 @@ class QuestionAPITest {
                 .build();
     }
 
-    private ResultActions performPostRequest(Object content) throws Exception {
-        return mockMvc.perform(post(QuestionAPITest.QUESTION_PATH)
+    private static SignUpRequestDto buildSignUpRequest() {
+        return SignUpRequestDto.builder()
+                .firstName("creatorQuestion")
+                .lastName("lastname creator")
+                .username("creatorQuestion")
+                .email("creator.1uestion.test@gmail.com")
+                .password("password")
+                .build();
+    }
+
+    private static String registerUserAndGetToken(AuthAPI authAPI, SignUpRequestDto request) {
+        return Objects.requireNonNull(authAPI.registerUserWithRole(request, TypeRole.ROLE_SURVEY_CREATOR).getBody()).getAccessToken();
+    }
+
+    private ResultActions performAuthorizedRequest(HttpMethod method, String path, Object body, Object... uriVars) throws Exception {
+        var request = MockMvcRequestBuilders.request(method, path, uriVars)
+                .header("Authorization", "Bearer " + tokenCreator)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(content)));
-    }
+                .accept(MediaType.APPLICATION_JSON);
 
-    private ResultActions performGetRequest(Object... uriVariables) throws Exception {
-        return mockMvc.perform(get(QuestionAPITest.QUESTION_PATH_ID, uriVariables)
-                .contentType(MediaType.APPLICATION_JSON));
-    }
+        if (body != null) {
+            request.content(objectMapper.writeValueAsString(body));
+        }
 
-    private ResultActions performPutRequest(Object content, Object... uriVariables) throws Exception {
-        return mockMvc.perform(put(QuestionAPITest.QUESTION_PATH_ID, uriVariables)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(content)));
-    }
-
-    private ResultActions performDeleteRequest(Object... uriVariables) throws Exception {
-        return mockMvc.perform(delete(QuestionAPITest.QUESTION_PATH_ID, uriVariables)
-                .contentType(MediaType.APPLICATION_JSON));
+        return mockMvc.perform(request);
     }
 
     @Test
-    @Rollback
-    @Transactional
     @DisplayName("Create Question: Should create a question and return 201 Created")
     void testSaveQuestion() throws Exception {
-        var newSurvey = surveyRepository.save(surveyTest);
-        questionRequestDtoTest.setSurveyId(newSurvey.getId());
-
-        performPostRequest(questionRequestDtoTest)
+        questionRequestDtoTest.setSurveyId(surveyId);
+        performAuthorizedRequest(HttpMethod.POST, QuestionAPITest.QUESTION_PATH, questionRequestDtoTest)
                 .andExpect(status().isCreated());
     }
 
@@ -145,7 +159,7 @@ class QuestionAPITest {
     void testSaveQuestionNotFound() throws Exception {
         questionRequestDtoTest.setSurveyId(UUID.randomUUID());
 
-        performPostRequest(questionRequestDtoTest)
+        performAuthorizedRequest(HttpMethod.POST, QuestionAPITest.QUESTION_PATH, questionRequestDtoTest)
                 .andExpect(status().isNotFound());
     }
 
@@ -154,18 +168,15 @@ class QuestionAPITest {
     void testSaveQuestionBadRequest() throws Exception {
         questionRequestDtoTest.setContent(null);
 
-        performPostRequest(questionRequestDtoTest)
+        performAuthorizedRequest(HttpMethod.POST, QuestionAPITest.QUESTION_PATH, questionRequestDtoTest)
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("Create Question: Should return 409 Conflict when survey has reached the maximum number of questions")
     void testSaveQuestionConflict() throws Exception {
-        surveyTest.setQuestionCount(0);
-        var newSurvey = surveyRepository.save(surveyTest);
-        questionRequestDtoTest.setSurveyId(newSurvey.getId());
-
-        performPostRequest(questionRequestDtoTest)
+        questionRequestDtoTest.setSurveyId(surveyBId);
+        performAuthorizedRequest(HttpMethod.POST, QuestionAPITest.QUESTION_PATH, questionRequestDtoTest)
                 .andExpect(status().isConflict());
     }
 
@@ -174,18 +185,16 @@ class QuestionAPITest {
     @Transactional
     @DisplayName("Get Question by ID: Should return a question and 200 OK")
     void testGetQuestionById() throws Exception {
-        var newSurvey = surveyRepository.save(surveyTest);
-        questionRequestDtoTest.setSurveyId(newSurvey.getId());
-        var newQuestion = Objects.requireNonNull(questionAPI.saveQuestion(questionRequestDtoTest).getBody()).data();
-
-        performGetRequest(newQuestion.getId())
+        questionRequestDtoTest.setSurveyId(surveyId);
+        var newQuestion = questionInputPort.saveQuestion(questionRequestDtoTest).orElseThrow();
+        performAuthorizedRequest(HttpMethod.GET, QuestionAPITest.QUESTION_PATH_ID, null, newQuestion.getId())
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Get Question by ID: Should return 404 Not Found when question does not exist")
     void testGetQuestionByIdNotFound() throws Exception {
-        performGetRequest(UUID.randomUUID())
+        performAuthorizedRequest(HttpMethod.GET, QuestionAPITest.QUESTION_PATH_ID, null, UUID.randomUUID())
                 .andExpect(status().isNotFound());
     }
 
@@ -194,18 +203,16 @@ class QuestionAPITest {
     @Transactional
     @DisplayName("Update Question: Should update a question and return 204 No Content")
     void testUpdateQuestion() throws Exception {
-        var newSurvey = surveyRepository.save(surveyTest);
-        questionRequestDtoTest.setSurveyId(newSurvey.getId());
-        var newQuestion = Objects.requireNonNull(questionAPI.saveQuestion(questionRequestDtoTest).getBody()).data();
-
-        performPutRequest(questionUpdateRequestDtoTest, newQuestion.getId())
+        questionRequestDtoTest.setSurveyId(surveyId);
+        var newQuestion = questionInputPort.saveQuestion(questionRequestDtoTest).orElseThrow();
+        performAuthorizedRequest(HttpMethod.PUT, QuestionAPITest.QUESTION_PATH_ID, questionUpdateRequestDtoTest,  newQuestion.getId())
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("Update Question: Should return 404 Not Found when question does not exist")
     void testUpdateQuestionNotFound() throws Exception {
-        performPutRequest(questionUpdateRequestDtoTest, UUID.randomUUID())
+        performAuthorizedRequest(HttpMethod.PUT, QuestionAPITest.QUESTION_PATH_ID, questionUpdateRequestDtoTest, UUID.randomUUID())
                 .andExpect(status().isNotFound());
     }
 
@@ -214,25 +221,24 @@ class QuestionAPITest {
     void testUpdateQuestionBadRequest() throws Exception {
         questionUpdateRequestDtoTest.setContent(null);
 
-        performPutRequest(questionUpdateRequestDtoTest, UUID.randomUUID())
+        performAuthorizedRequest(HttpMethod.PUT, QuestionAPITest.QUESTION_PATH_ID, questionUpdateRequestDtoTest, UUID.randomUUID())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("Delete Question: Should delete a question and return 204 No Content")
     void testDeleteQuestion() throws Exception {
-        var newSurvey = surveyRepository.save(surveyTest);
-        questionRequestDtoTest.setSurveyId(newSurvey.getId());
-        var newQuestion = Objects.requireNonNull(questionAPI.saveQuestion(questionRequestDtoTest).getBody()).data();
+        questionRequestDtoTest.setSurveyId(surveyId);
+        var newQuestion = questionInputPort.saveQuestion(questionRequestDtoTest).orElseThrow();
 
-        performDeleteRequest(newQuestion.getId())
+        performAuthorizedRequest(HttpMethod.DELETE, QuestionAPITest.QUESTION_PATH_ID, questionUpdateRequestDtoTest, newQuestion.getId())
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("Delete Question: Should return 404 Not Found when question does not exist")
     void testDeleteQuestionNotFound() throws Exception {
-        performDeleteRequest(UUID.randomUUID())
+        performAuthorizedRequest(HttpMethod.DELETE, QuestionAPITest.QUESTION_PATH_ID, null, UUID.randomUUID())
                 .andExpect(status().isNotFound());
     }
 }

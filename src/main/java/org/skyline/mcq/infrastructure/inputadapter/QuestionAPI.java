@@ -12,14 +12,17 @@ import org.skyline.mcq.infrastructure.http.ResponseHandler;
 import org.skyline.mcq.infrastructure.http.dto.ResponseBody;
 import org.skyline.mcq.infrastructure.inputport.QuestionInputPort;
 import org.skyline.mcq.infrastructure.inputport.SurveyInputPort;
+import org.skyline.mcq.infrastructure.utils.JwtTokenProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'SURVEY_CREATOR')")
 public class QuestionAPI {
 
     private static final String QUESTION_PATH = "/api/v1/questions";
@@ -28,11 +31,14 @@ public class QuestionAPI {
     private final SurveyInputPort surveyInputPort;
     private final QuestionInputPort questionInputPort;
     private final ResponseHandler responseHandler;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping(QUESTION_PATH)
     public ResponseEntity<ResponseBody<QuestionResponseDto>> saveQuestion(@Valid @RequestBody QuestionRequestDto question) {
 
-        SurveyResponseDto surveyFound = surveyInputPort.findSurveyById(question.getSurveyId()).filter(SurveyResponseDto::getStatus)
+        SurveyResponseDto surveyFound = surveyInputPort
+                .findSurveyByIdAndAccountId(question.getSurveyId(),jwtTokenProvider.getCurrentUserDetails().getId())
+                .filter(SurveyResponseDto::getStatus)
                 .orElseThrow(() -> new NotFoundException(
                         "Survey",
                         question.getSurveyId().toString(),
@@ -47,32 +53,42 @@ public class QuestionAPI {
             );
         }
 
-        QuestionResponseDto questionResponseDto = questionInputPort.saveQuestion(question).orElse(null);
+        QuestionResponseDto questionResponseDto = questionInputPort.saveQuestion(question)
+                .orElseThrow(() -> new ConflictException(
+                        "Question",
+                        question.getSurveyId().toString(),
+                        "Could not save the question"
+                ));
 
         return responseHandler.responseBuild(HttpStatus.CREATED, "Question Created Successfully", questionResponseDto);
     }
 
     @GetMapping(QUESTION_PATH_ID)
     public ResponseEntity<ResponseBody<QuestionResponseDto>> getQuestionById(@PathVariable UUID questionId) {
-        return questionInputPort.findQuestionById(questionId).map(question -> responseHandler.responseBuild(
-                HttpStatus.OK,
-                "Requested Question By ID are given here",
-                question
-        )).orElseThrow(() -> new NotFoundException(
-                "Question",
-                questionId.toString(),
-                "Please provide a valid question ID"
-        ));
+
+        return questionInputPort.findQuestionByIdAndAccountId(questionId, jwtTokenProvider.getCurrentUserDetails().getId())
+                .map(question -> responseHandler.responseBuild(
+                        HttpStatus.OK,
+                        "Requested Question By ID are given here",
+                        question
+                )).orElseThrow(() -> new NotFoundException(
+                        "Question",
+                        questionId.toString(),
+                        "Please provide a valid question ID"
+                ));
     }
 
     @PutMapping(QUESTION_PATH_ID)
     public ResponseEntity<Void> updateQuestion(@PathVariable UUID questionId, @Valid @RequestBody QuestionUpdateRequestDto question) {
 
-        questionInputPort.updateQuestion(questionId, question).orElseThrow(() -> new NotFoundException(
+        UUID accountId = jwtTokenProvider.getCurrentUserDetails().getId();
+        questionInputPort.findQuestionByIdAndAccountId(questionId, accountId).orElseThrow(() -> new NotFoundException(
                 "Question",
                 questionId.toString(),
                 "Please provide a valid question ID"
         ));
+
+        questionInputPort.updateQuestion(questionId, question);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -80,7 +96,8 @@ public class QuestionAPI {
     @DeleteMapping(QUESTION_PATH_ID)
     public ResponseEntity<Void> deleteQuestion(@PathVariable UUID questionId) {
 
-        if (Boolean.FALSE.equals(questionInputPort.deleteQuestion(questionId))) {
+        UUID accountId = jwtTokenProvider.getCurrentUserDetails().getId();
+        if (Boolean.FALSE.equals(questionInputPort.deleteQuestion(questionId, accountId))) {
             throw new NotFoundException(
                     "Question",
                     questionId.toString(),

@@ -24,7 +24,6 @@ public class QuestionService implements QuestionInputPort {
     private final SurveyRepository surveyRepository;
     private final QuestionMapper questionMapper;
 
-
     @Override
     @Transactional
     public Optional<QuestionResponseDto> saveQuestion(QuestionRequestDto question) {
@@ -46,6 +45,13 @@ public class QuestionService implements QuestionInputPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<QuestionResponseDto> findQuestionByIdAndAccountId(UUID id, UUID accountId) {
+        return Optional.ofNullable(questionMapper
+                .questionToQuestionResponseDto(questionRepository.findByIdAndSurveyAccountId(id, accountId).orElse(null)));
+    }
+
+    @Override
     @Transactional
     public Optional<QuestionResponseDto> updateQuestion(UUID uuid, QuestionUpdateRequestDto question) {
 
@@ -57,9 +63,9 @@ public class QuestionService implements QuestionInputPort {
 
     @Override
     @Transactional
-    public Boolean deleteQuestion(UUID id) {
+    public Boolean deleteQuestion(UUID id, UUID accountId) {
 
-        return questionRepository.findById(id).map(questionFound -> {
+        return questionRepository.findByIdAndSurveyAccountId(id, accountId).map(questionFound -> {
             questionRepository.delete(questionFound);
             return true;
         }).orElse(false);

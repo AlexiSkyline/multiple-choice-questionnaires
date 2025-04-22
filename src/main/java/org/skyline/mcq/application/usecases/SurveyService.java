@@ -62,6 +62,13 @@ public class SurveyService implements SurveyInputPort {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<SurveyResponseDto> findSurveyByIdAndAccountId(UUID id, UUID accountId) {
+        return Optional.ofNullable(surveyMapper.surveyToSurveyResponseDto(this.surveyRepository.findByIdAndAccountId(id, accountId)
+                .filter(Survey::getActive).orElse(null)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<SurveyResponseDto> listSurveys(UUID categoryId, Boolean status, Boolean hasRestrictedAccess, UUID accountId, Boolean isActive, Integer pageNumber, Integer pageSize) {
 
         PageRequest pageRequest = paginationHelper.buildPageRequest(pageNumber, pageSize);
@@ -115,7 +122,7 @@ public class SurveyService implements SurveyInputPort {
 
         Optional<Survey> survey = surveyRepository.findByIdAndAccountId(id, accountId);
 
-        if (survey.isPresent() && Boolean.FALSE.equals(!survey.get().getActive())) {
+        if (survey.isPresent() && Boolean.TRUE.equals(survey.get().getActive())) {
             survey.get().setActive(false);
             surveyRepository.save(survey.get());
             return true;
