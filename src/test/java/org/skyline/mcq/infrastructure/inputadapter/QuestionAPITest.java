@@ -103,8 +103,8 @@ class QuestionAPITest {
                 .image("Test Image")
                 .points(10)
                 .allowedAnswers(1)
-                .options("Option 1, Option 2, Option 3, Option 4")
-                .correctAnswers("Option 1")
+                .options("{\"optionA\":\"Refresco\",\"optionB\":\"Agua\",\"optionC\":\"Cerveza\",\"optionD\":\"Jugo\"}")
+                .correctAnswers("{\"optionA\":\"Refresco\",\"optionC\":\"Cerveza\"}")
                 .build();
     }
 
@@ -114,8 +114,8 @@ class QuestionAPITest {
                 .image("Test Image update")
                 .points(10)
                 .allowedAnswers(1)
-                .options("Option 1, Option 2, Option 3, Option 4")
-                .correctAnswers("Option 2")
+                .options("{\"optionA\":\"Refresco\",\"optionB\":\"Agua\",\"optionC\":\"Cerveza\",\"optionD\":\"Jugo\"}")
+                .correctAnswers("{\"optionA\":\"Refresco\",\"optionC\":\"Cerveza\"}")
                 .build();
     }
 

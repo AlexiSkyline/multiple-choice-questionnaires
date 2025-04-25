@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.skyline.mcq.application.utils.JsonValidation;
 
 import java.util.UUID;
 
@@ -28,10 +29,12 @@ public class QuestionRequestDto {
 
     @NotNull
     @NotBlank
+    @JsonValidation
     private String options;
 
     @NotNull
     @NotBlank
+    @JsonValidation
     private String correctAnswers;
 
     @NotNull
