@@ -1,8 +1,10 @@
 package org.skyline.mcq.infrastructure.inputport;
 
+import org.skyline.mcq.application.dtos.input.SurveyAnswersDto;
 import org.skyline.mcq.application.dtos.input.SurveyRequestDto;
 import org.skyline.mcq.application.dtos.input.SurveyUpdateRequestDto;
 import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
+import org.skyline.mcq.application.dtos.output.ResultResponseDto;
 import org.skyline.mcq.application.dtos.output.SurveyResponseDto;
 import org.springframework.data.domain.Page;
 
@@ -18,4 +20,5 @@ public interface SurveyInputPort {
     Page<AccountSummaryDto> listAccountsBySurveyIdAndSurveyActiveAndUserActive(UUID surveyId, Boolean isActiveSurvey, Boolean isActiveAccount, Integer pageNumber, Integer pageSize);
     Optional<SurveyResponseDto> updateSurvey(UUID id, UUID accountId, SurveyUpdateRequestDto survey);
     Boolean deleteSurvey(UUID id, UUID accountId);
+    Optional<ResultResponseDto> submitSurvey(SurveyAnswersDto surveyAnswersDto, UUID accountId);
 }

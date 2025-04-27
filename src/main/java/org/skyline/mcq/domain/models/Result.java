@@ -45,7 +45,7 @@ public class Result {
     private Integer incorrectAnswers;
 
     @Builder.Default
-    @OneToMany(mappedBy = "result")
+    @OneToMany(mappedBy = "result", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Answer> answers = new HashSet<>();
 
     @CreationTimestamp

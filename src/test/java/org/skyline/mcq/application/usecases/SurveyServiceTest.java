@@ -1,5 +1,6 @@
 package org.skyline.mcq.application.usecases;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,24 +8,25 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyline.mcq.application.dtos.input.AnswersDto;
+import org.skyline.mcq.application.dtos.input.SurveyAnswersDto;
 import org.skyline.mcq.application.dtos.input.SurveyRequestDto;
 import org.skyline.mcq.application.dtos.input.SurveyUpdateRequestDto;
 import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
+import org.skyline.mcq.application.dtos.output.ResultResponseDto;
 import org.skyline.mcq.application.dtos.output.SurveyResponseDto;
 import org.skyline.mcq.application.mappings.AccountMapper;
+import org.skyline.mcq.application.mappings.ResultMapper;
 import org.skyline.mcq.application.mappings.SurveyMapper;
 import org.skyline.mcq.application.utils.PaginationHelper;
-import org.skyline.mcq.domain.models.Account;
-import org.skyline.mcq.domain.models.Category;
-import org.skyline.mcq.domain.models.Survey;
-import org.skyline.mcq.infrastructure.outputport.AccountRepository;
-import org.skyline.mcq.infrastructure.outputport.CategoryRepository;
-import org.skyline.mcq.infrastructure.outputport.SurveyRepository;
+import org.skyline.mcq.domain.models.*;
+import org.skyline.mcq.infrastructure.outputport.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +46,12 @@ class SurveyServiceTest {
     private CategoryRepository categoryRepository;
 
     @Mock
+    private QuestionRepository questionRepository;
+
+    @Mock
+    private ResultRepository resultRepository;
+
+    @Mock
     private PaginationHelper paginationHelper;
 
     @Mock
@@ -51,6 +59,12 @@ class SurveyServiceTest {
 
     @Mock
     private AccountMapper accountMapper;
+
+    @Mock
+    private ResultMapper resultMapper;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private SurveyService surveyService;
@@ -65,6 +79,16 @@ class SurveyServiceTest {
     private List<AccountSummaryDto> accounts;
     private Page<Account> accountPage;
     private Page<Survey> surveyPage;
+    private Question questionTest;
+    private AnswersDto goodAnswersTest;
+    private AnswersDto badAnswersTest;
+    private AnswersDto badValueTest;
+    private final Map<String, Object> goodAnswerUserMap = new HashMap<>();
+    private final Map<String, Object> badAnswerUserMap = new HashMap<>();
+    private final Map<String, Object> badValueUserMap = new HashMap<>();
+    private Result resultTest;
+    private ResultResponseDto resultResponseDtoTest;
+    private ResultResponseDto resultResponseDtoTestB;
 
     @BeforeEach
     void setUp() {
@@ -96,6 +120,7 @@ class SurveyServiceTest {
         pageable = PageRequest.of(0, 10);
 
         accountTest = Account.builder()
+                .id(UUID.randomUUID())
                 .firstName("Sky")
                 .lastName("Taylor")
                 .username("sky_responder")
@@ -136,6 +161,15 @@ class SurveyServiceTest {
                 .hasRestrictedAccess(true)
                 .build();
 
+        questionTest = Question.builder()
+                .content("¿Qué bebidas contienen alcohol?")
+                .image("question1.png")
+                .points(2)
+                .allowedAnswers(1)
+                .options("{\"optionA\":\"Refresco\",\"optionB\":\"Agua\",\"optionC\":\"Cerveza\",\"optionD\":\"Jugo\"}")
+                .correctAnswers("{\"optionC\":\"Cerveza\"}")
+                .build();
+
         AccountSummaryDto accountSummaryDtoTest = AccountSummaryDto.builder()
                 .id(UUID.randomUUID())
                 .firstName("Sky")
@@ -143,6 +177,46 @@ class SurveyServiceTest {
                 .username("sky_responder")
                 .email("sky@gmail.com")
                 .build();
+
+        goodAnswersTest = AnswersDto.builder()
+                .questionId(UUID.randomUUID())
+                .userAnswers("{\"optionC\":\"Cerveza\"}")
+                .build();
+
+        badAnswersTest = AnswersDto.builder()
+                .questionId(UUID.randomUUID())
+                .userAnswers("{\"optionD\":\"Jugo\"}")
+                .build();
+
+        badValueTest = AnswersDto.builder()
+                .questionId(UUID.randomUUID())
+                .userAnswers("{\"optionC\":\"Jugo\"}")
+                .build();
+
+        resultTest = Result.builder()
+                .id(surveyTest.getId())
+                .account(accountTest)
+                .survey(surveyTest)
+                .totalPoints(10)
+                .correctAnswers(5)
+                .incorrectAnswers(0)
+                .build();
+
+        resultResponseDtoTest = ResultResponseDto.builder()
+                .correctAnswers(5)
+                .incorrectAnswers(0)
+                .totalPoints(10)
+                .build();
+
+        resultResponseDtoTestB = ResultResponseDto.builder()
+                .correctAnswers(2)
+                .incorrectAnswers(3)
+                .totalPoints(6)
+                .build();
+
+        goodAnswerUserMap.put("optionC", "Cerveza");
+        badAnswerUserMap.put("optionD", "Jugo");
+        badValueUserMap.put("optionC", "Jugo");
 
         accounts = Collections.singletonList(accountSummaryDtoTest);
         accountPage = new PageImpl<>(Collections.singletonList(accountTest), pageable, 1);
@@ -262,6 +336,35 @@ class SurveyServiceTest {
 
         verify(surveyRepository).findById(surveyTest.getId());
         verify(surveyMapper, never()).surveyToSurveyResponseDto(surveyTest);
+    }
+
+    @Test
+    @DisplayName("Find Survey by Id and Account ID: Should return the survey")
+    void testFindSurveyByIdAndAccountId() {
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.of(surveyTest));
+        given(surveyMapper.surveyToSurveyResponseDto(surveyTest)).willReturn(surveyResponseDtoTest);
+
+        var result = surveyService.findSurveyByIdAndAccountId(surveyTest.getId(), accountTest.getId()).orElseThrow();
+
+        assertAll("Find Survey by Id and Account ID",
+                () -> assertEquals(surveyResponseDtoTest, result, "The returned DTO should match the expected one")
+        );
+
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
+    }
+
+    @Test
+    @DisplayName("Find Survey by Id and Account ID: Should return empty when the survey does not exist")
+    void testFindSurveyByIdAndAccountIdNotFound() {
+        given(surveyRepository.findByIdAndAccountId(surveyTest.getId(), accountTest.getId())).willReturn(Optional.empty());
+
+        var result = surveyService.findSurveyByIdAndAccountId(surveyTest.getId(), accountTest.getId());
+
+        assertAll("Find Survey by Id and Account ID - Not Found",
+                () -> assertTrue(result.isEmpty(), "The result should be empty since the survey does not exist")
+        );
+
+        verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
     }
 
     @Test
@@ -432,5 +535,138 @@ class SurveyServiceTest {
 
         verify(surveyRepository).findByIdAndAccountId(surveyTest.getId(), accountTest.getId());
         verify(surveyRepository, never()).save(any());
+    }
+    @Test
+    @DisplayName("Submit Survey: Should calculate full score when all answers are correct")
+    void testSubmitSurvey() {
+        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+        given(questionRepository.findById(any())).willReturn(Optional.of(questionTest));
+        given(objectMapper.convertValue(goodAnswersTest.getUserAnswers(), Map.class)).willReturn(goodAnswerUserMap);
+        given(resultRepository.save(any())).willReturn(resultTest);
+        given(resultMapper.resultToResultResponseDto(any())).willReturn(resultResponseDtoTest);
+
+        SurveyAnswersDto surveyAnswersDto = SurveyAnswersDto.builder()
+                .surveyId(surveyTest.getId())
+                .startTime(LocalDateTime.now())
+                .answers(Arrays.asList(
+                        goodAnswersTest,
+                        goodAnswersTest,
+                        goodAnswersTest,
+                        goodAnswersTest,
+                        goodAnswersTest
+                ))
+                .endTime(LocalDateTime.now().plusMinutes(30))
+                .build();
+
+        var result = surveyService.submitSurvey(surveyAnswersDto, accountTest.getId()).orElseThrow();
+
+        assertAll("Full Score Validation",
+                () -> assertNotNull(result, "The result should not be null"),
+                () -> assertEquals(10, result.getTotalPoints(), "Total points should be maximum (10 points)"),
+                () -> assertEquals(5, result.getCorrectAnswers(), "All questions should be answered correctly"),
+                () -> assertEquals(0, result.getIncorrectAnswers(), "There should be no incorrect answers")
+        );
+
+        verify(surveyRepository).findById(surveyTest.getId());
+        verify(accountRepository).findById(accountTest.getId());
+        verify(questionRepository, times(5)).findById(any());
+        verify(objectMapper, times(10)).convertValue(goodAnswersTest.getUserAnswers(), Map.class);
+        verify(resultRepository).save(any());
+        verify(resultMapper).resultToResultResponseDto(any());
+    }
+
+    @Test
+    @DisplayName("Submit Survey: Should return empty result when survey does not exist")
+    void testSubmitSurveySurveyNotFound() {
+        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.empty());
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+
+        SurveyAnswersDto surveyAnswersDto = SurveyAnswersDto.builder()
+                .surveyId(surveyTest.getId())
+                .answers(List.of())
+                .build();
+
+        var result = surveyService.submitSurvey(surveyAnswersDto, accountTest.getId());
+
+        assertAll("Survey Not Found Validation",
+                () -> assertTrue(result.isEmpty(), "The result should be empty because the survey was not found")
+        );
+
+        verify(surveyRepository).findById(surveyTest.getId());
+        verify(accountRepository).findById(accountTest.getId());
+    }
+
+    @Test
+    @DisplayName("Submit Survey: Should return empty result when account does not exist")
+    void testSubmitSurveyAccountNotFound() {
+        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.empty());
+
+        SurveyAnswersDto surveyAnswersDto = SurveyAnswersDto.builder()
+                .surveyId(surveyTest.getId())
+                .answers(List.of())
+                .build();
+
+        var result = surveyService.submitSurvey(surveyAnswersDto, accountTest.getId());
+
+        assertAll("Account Not Found Validation",
+                () -> assertTrue(result.isEmpty(), "The result should be empty because the account was not found")
+        );
+
+        verify(surveyRepository).findById(surveyTest.getId());
+        verify(accountRepository).findById(accountTest.getId());
+    }
+
+    @Test
+    @DisplayName("Submit Survey: Should calculate partial score when some answers are incorrect")
+    void testSubmitSurveySomeBadAnswers() {
+        var notFoundAnswers = AnswersDto.builder()
+                .questionId(UUID.randomUUID())
+                .userAnswers("{\"optionC\":\"Jugo\"}")
+                .build();
+
+        given(surveyRepository.findById(surveyTest.getId())).willReturn(Optional.of(surveyTest));
+        given(accountRepository.findById(accountTest.getId())).willReturn(Optional.of(accountTest));
+        given(questionRepository.findById(any())).willReturn(Optional.of(questionTest));
+        given(questionRepository.findById(notFoundAnswers.getQuestionId())).willReturn(Optional.empty());
+        given(objectMapper.convertValue(goodAnswersTest.getUserAnswers(), Map.class)).willReturn(goodAnswerUserMap);
+        given(objectMapper.convertValue(badAnswersTest.getUserAnswers(), Map.class)).willReturn(badAnswerUserMap);
+        given(objectMapper.convertValue(badValueTest.getUserAnswers(), Map.class)).willReturn(badValueUserMap);
+        given(resultRepository.save(any())).willReturn(resultTest);
+        given(resultMapper.resultToResultResponseDto(any())).willReturn(resultResponseDtoTestB);
+
+        SurveyAnswersDto surveyAnswersDto = SurveyAnswersDto.builder()
+                .surveyId(surveyTest.getId())
+                .startTime(LocalDateTime.now())
+                .answers(Arrays.asList(
+                        goodAnswersTest,
+                        goodAnswersTest,
+                        badAnswersTest,
+                        badAnswersTest,
+                        badValueTest,
+                        notFoundAnswers
+                ))
+                .endTime(LocalDateTime.now().plusMinutes(30))
+                .build();
+
+        var result = surveyService.submitSurvey(surveyAnswersDto, accountTest.getId()).orElseThrow();
+
+        assertAll("Partial Score Validation",
+                () -> assertNotNull(result, "The result should not be null"),
+                () -> assertEquals(6, result.getTotalPoints(), "Total points should reflect only correct answers (6 points)"),
+                () -> assertEquals(2, result.getCorrectAnswers(), "Only 2 questions should be correct"),
+                () -> assertEquals(3, result.getIncorrectAnswers(), "There should be 3 incorrect answers")
+        );
+
+        verify(surveyRepository).findById(surveyTest.getId());
+        verify(accountRepository).findById(accountTest.getId());
+        verify(questionRepository, times(6)).findById(any());
+        verify(questionRepository).findById(notFoundAnswers.getQuestionId());
+        verify(objectMapper, times(7)).convertValue(goodAnswersTest.getUserAnswers(), Map.class);
+        verify(objectMapper, times(2)).convertValue(badAnswersTest.getUserAnswers(), Map.class);
+        verify(objectMapper, times(2)).convertValue(badValueTest.getUserAnswers(), Map.class);
+        verify(resultRepository).save(any());
+        verify(resultMapper).resultToResultResponseDto(any());
     }
 }
