@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.skyline.mcq.application.dtos.input.*;
@@ -59,6 +60,7 @@ public class AuthAPI {
     }
 
     @PostMapping("/refresh-token")
+    @SecurityRequirement(name = "BearerAuth")
     public ResponseEntity<JwtResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequestDto refreshTokenRequest) {
         RefreshToken validRefreshToken = validateAndGetRefreshToken(refreshTokenRequest.getRefreshToken());
 

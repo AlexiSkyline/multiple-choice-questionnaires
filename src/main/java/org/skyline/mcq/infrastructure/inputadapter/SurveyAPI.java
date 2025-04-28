@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class SurveyAPI {
 
     public static final String SURVEY_PATH = "/api/v1/surveys";

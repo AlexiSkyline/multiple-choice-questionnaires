@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.skyline.mcq.application.dtos.output.ResultResponseDto;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class ResultAPI {
 
     public static final String RESULT_PATH = "/api/v1/results";

@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class CategoryAPI {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping(CATEGORY_PATH)
+    @SecurityRequirement(name = "BearerAuth")
     @PreAuthorize("hasAnyRole('ADMIN', 'SURVEY_CREATOR')")
     public ResponseEntity<ResponseBody<CategoryResponseDto>> createCategory(@Valid @RequestBody CategoryRequestDto categoryRequestDto) {
 
@@ -54,6 +56,7 @@ public class CategoryAPI {
 
     @GetMapping(CATEGORY_PATH + "/admin")
     @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "BearerAuth")
     public ResponseEntity<ResponseBody<Page<CategoryResponseDto>>> getAllCategories(@RequestParam(required = false) UUID accountId,
                                                                                     @RequestParam(required = false) String title,
                                                                                     @RequestParam(required = false) Boolean isActive,
@@ -67,6 +70,7 @@ public class CategoryAPI {
     }
 
     @GetMapping(CATEGORY_PATH + "/creator")
+    @SecurityRequirement(name = "BearerAuth")
     @PreAuthorize("hasRole('SURVEY_CREATOR')")
     public ResponseEntity<ResponseBody<Page<CategoryResponseDto>>> getAllCategories(@RequestParam(required = false) UUID accountId,
                                                                                     @RequestParam(required = false) String title,
@@ -80,6 +84,7 @@ public class CategoryAPI {
     }
 
     @PutMapping(CATEGORY_PATH_ID)
+    @SecurityRequirement(name = "BearerAuth")
     @PreAuthorize("hasAnyRole('ADMIN', 'SURVEY_CREATOR')")
     public ResponseEntity<Void> updateCategory(@PathVariable("categoryId") UUID categoryId,
                                                @Valid @RequestBody CategoryRequestDto categoryRequestDto) {
@@ -94,6 +99,7 @@ public class CategoryAPI {
     }
 
     @DeleteMapping(CATEGORY_PATH_ID)
+    @SecurityRequirement(name = "BearerAuth")
     @PreAuthorize("hasAnyRole('ADMIN', 'SURVEY_CREATOR')")
     public ResponseEntity<Void> deleteCategory(@PathVariable("categoryId") UUID categoryId) {
 

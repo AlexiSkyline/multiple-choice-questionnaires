@@ -1,5 +1,6 @@
 package org.skyline.mcq.infrastructure.inputadapter;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.skyline.mcq.application.dtos.input.QuestionRequestDto;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 @PreAuthorize("hasAnyRole('ADMIN', 'SURVEY_CREATOR')")
 public class QuestionAPI {
 
