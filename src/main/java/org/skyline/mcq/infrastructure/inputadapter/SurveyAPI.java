@@ -3,11 +3,11 @@ package org.skyline.mcq.infrastructure.inputadapter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.skyline.mcq.application.dtos.input.SurveyAnswersDto;
 import org.skyline.mcq.application.dtos.input.SurveyRequestDto;
 import org.skyline.mcq.application.dtos.input.SurveyUpdateRequestDto;
-import org.skyline.mcq.application.dtos.output.AccountSummaryDto;
-import org.skyline.mcq.application.dtos.output.QuestionSummaryDto;
-import org.skyline.mcq.application.dtos.output.SurveyResponseDto;
+import org.skyline.mcq.application.dtos.output.*;
+import org.skyline.mcq.domain.exceptions.ConflictException;
 import org.skyline.mcq.domain.exceptions.NotFoundException;
 import org.skyline.mcq.infrastructure.http.ResponseHandler;
 import org.skyline.mcq.infrastructure.http.dto.ResponseBody;
@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.Set;
 import java.util.UUID;
 
@@ -167,6 +168,30 @@ public class SurveyAPI {
                 HttpStatus.OK,
                 "(Admin) Requested All Accounts for Survey are given here",
                 surveyInputPort.listAccountsBySurveyIdAndSurveyActiveAndUserActive(surveyId, isActiveSurvey, isActiveAccounts, pageNumber, pageSize)
+        );
+    }
+
+    @PostMapping(SURVEY_PATH + "/submit")
+    @PreAuthorize("hasRole('SURVEY_RESPONDENT')")
+    public ResponseEntity<ResponseBody<ResultResponseDto>> submitSurvey(@Valid @RequestBody SurveyAnswersDto surveyAnswersDto) {
+        var surveyFound = surveyInputPort.findSurveyById(surveyAnswersDto.getSurveyId()).orElseThrow(() -> new NotFoundException(
+                "Survey",
+                surveyAnswersDto.getSurveyId().toString(),
+                "Please provide a valid survey ID"
+        ));
+        Timestamp startTime = Timestamp.valueOf(surveyAnswersDto.getStartTime());
+        Timestamp endTime = Timestamp.valueOf(surveyAnswersDto.getEndTime());
+        int durationMillis = Math.toIntExact(endTime.getTime() - startTime.getTime());
+        if (durationMillis > surveyFound.getTimeLimit()) throw new ConflictException("Survey", surveyAnswersDto.getSurveyId().toString(), "Survey time limit exceeded");
+
+
+        var result = surveyInputPort.submitSurvey(surveyAnswersDto, jwtInputPort.getCurrentUserDetails().getId())
+                .orElseThrow(() -> new ConflictException("Survey or Account", surveyAnswersDto.getSurveyId() + " " + jwtInputPort.getCurrentUserDetails().getId(), "Survey already submitted or Account is inactive"));
+
+        return responseHandler.responseBuild(
+                HttpStatus.OK,
+                "(Survey respondent) Request result for Survey are given here",
+                result
         );
     }
 }
