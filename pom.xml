@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.skyline.mcq</groupId>
     <artifactId>multiple-choice-questionnaires</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>multiple choice questionnaires</name>
     <description>multiple choice questionnaires</description>
     <url/>
